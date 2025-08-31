@@ -25,7 +25,7 @@ Production-ready micro-SaaS starter built by expert Laravel developers with 5+ y
 
 ## 📧 Support & Services
 
-- 🐛 [Issues](https://github.com/your-repo/issues)
+- 🐛 [Issues](https://github.com/4RSIM3R/laranext-microsaas/issues)
 - 📧 contact@nexteam.id
 
 **Need custom development?** Our team delivers complete SaaS platforms in 2-3 weeks with AI-assisted development. [Get a free consultation](mailto:contact@nexteam.id).
