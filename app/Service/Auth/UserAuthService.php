@@ -3,10 +3,11 @@
 namespace App\Service\Auth;
 
 use App\Models\User;
+use App\Contract\Auth\UserAuthContract;
 use App\Service\AuthService;
 use Illuminate\Database\Eloquent\Model;
 
-class UserAuthService extends AuthService
+class UserAuthService extends AuthService implements UserAuthContract
 {
 
     protected string $username = 'email';

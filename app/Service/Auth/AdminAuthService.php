@@ -4,10 +4,11 @@ namespace App\Service\Auth;
 
 use App\Models\Admin;
 use App\Models\AdminPasswordResetToken;
+use App\Contract\Auth\AdminAuthContract;
 use App\Service\AuthService;
 use Illuminate\Database\Eloquent\Model;
 
-class AdminAuthService extends AuthService
+class AdminAuthService extends AuthService implements AdminAuthContract
 {
 
     protected string $username = 'email';
