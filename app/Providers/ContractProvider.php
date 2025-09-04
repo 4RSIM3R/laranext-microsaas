@@ -4,15 +4,17 @@ namespace App\Providers;
 
 use App\Contract\AuthContract;
 use App\Contract\BaseContract;
-use App\Contract\Master\AddonContract;
 use App\Contract\Master\FeatureContract;
 use App\Contract\Master\PlanContract;
 use App\Contract\Master\UserContract;
 use App\Contract\Setting\AppSettingContract;
 use App\Contract\Setting\SystemSettingContract;
+use App\Contract\Auth\UserAuthContract;
+use App\Contract\Auth\AdminAuthContract;
+use App\Service\Auth\UserAuthService;
+use App\Service\Auth\AdminAuthService;
 use App\Service\BaseService;
 use App\Service\AuthService;
-use App\Service\Master\AddonService;
 use App\Service\Master\FeatureService;
 use App\Service\Master\PlanService;
 use App\Service\Master\UserService;
@@ -30,6 +32,12 @@ class ContractProvider extends ServiceProvider
         
         $this->app->bind(BaseContract::class, BaseService::class);
         $this->app->bind(AuthContract::class, AuthService::class);
+
+        /**
+         * Auth Service Contract.
+         */
+        $this->app->bind(UserAuthContract::class, UserAuthService::class);
+        $this->app->bind(AdminAuthContract::class, AdminAuthService::class);
 
         /**
          * Master Service Contract.
