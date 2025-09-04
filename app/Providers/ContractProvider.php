@@ -8,12 +8,16 @@ use App\Contract\Master\AddonContract;
 use App\Contract\Master\FeatureContract;
 use App\Contract\Master\PlanContract;
 use App\Contract\Master\UserContract;
+use App\Contract\Setting\AppSettingContract;
+use App\Contract\Setting\SystemSettingContract;
 use App\Service\BaseService;
 use App\Service\AuthService;
 use App\Service\Master\AddonService;
 use App\Service\Master\FeatureService;
 use App\Service\Master\PlanService;
 use App\Service\Master\UserService;
+use App\Service\Setting\AppSettingService;
+use App\Service\Setting\SystemSettingService;
 use Illuminate\Support\ServiceProvider;
 
 class ContractProvider extends ServiceProvider
@@ -30,10 +34,16 @@ class ContractProvider extends ServiceProvider
         /**
          * Master Service Contract.
          */
-        $this->app->bind(AddonContract::class, AddonService::class);
         $this->app->bind(FeatureContract::class, FeatureService::class);
         $this->app->bind(PlanContract::class, PlanService::class);
         $this->app->bind(UserContract::class, UserService::class);
+
+
+        /**
+         * Setting Service Contract.
+         */
+        $this->app->bind(AppSettingContract::class, AppSettingService::class);
+        $this->app->bind(SystemSettingContract::class, SystemSettingService::class);
     }
 
     /**
