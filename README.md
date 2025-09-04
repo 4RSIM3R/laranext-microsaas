@@ -7,15 +7,15 @@ Production-ready micro-SaaS starter built by expert Laravel developers with 5+ y
 ## ✨ Features
 
 ### Enterprise-Grade, Startup-Friendly
+
 - **Admin Dashboard** - Complete management panel
-- **Team Management** - Multi-user workspaces with roles  
 - **Stripe Payments** - Battle-tested Laravel Cashier integration
 - **Subscription Plans** - Flexible pricing tiers with feature gating
 - **User Profiles** - Full profile management system
 
 **Tech Stack**: Laravel • Inertia.js • Tailwind CSS • Shadcn/ui
 
-*Pre-built solutions for payments, and subscriptions - focus on what makes your SaaS unique.*
+_Pre-built solutions for payments, and subscriptions - focus on what makes your SaaS unique._
 
 ## 🗺️ Roadmap
 
