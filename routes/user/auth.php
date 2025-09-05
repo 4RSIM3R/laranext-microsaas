@@ -10,6 +10,10 @@ Route::group(['middleware' => 'guest', 'prefix' => 'user', 'as' => 'auth.'], fun
     Route::get('register', [UserAuthController::class, 'register'])->name('register');
     Route::post('register', [UserAuthController::class, 'store'])->name('store');
 
+    Route::get('verify-email', [UserAuthController::class, 'verify_email'])->name('verify-email');
+    Route::get('resend-verification', [UserAuthController::class, 'resend_verification_page'])->name('resend-verification-page');
+    Route::post('resend-verification', [UserAuthController::class, 'resend_verification'])->name('resend-verification');
+
     Route::group(['middleware' => 'auth'], function () {
         Route::post('logout', [UserAuthController::class, 'logout'])->name('logout');
     });

@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Contract\AuthContract;
 use App\Mail\OTPMail;
+use App\Mail\EmailVerificationMail;
 use App\Models\PasswordResetToken;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -68,15 +69,19 @@ class AuthService implements AuthContract
             $user = $userQuery->first();
 
             if (!$userQuery->exists()) {
-                return new Exception($this->username . ' tidak terdaftar.');
+                return new Exception($this->username . ' not registered.');
             }
 
             if (!Hash::check($credentials["password"], $user->password)) {
-                return new Exception('Password salah.');
+                return new Exception('Password incorrect.');
+            }
+
+            if (!$user->email_verified_at) {
+                return new Exception('Email not verified.');
             }
 
             if (!$login = Auth::guard($this->guard)->attempt($credentials)) {
-                return new Exception($this->username . ' atau password salah.');
+                return new Exception($this->username . ' or password incorrect.');
             }
 
             return $login;
@@ -97,7 +102,7 @@ class AuthService implements AuthContract
             DB::beginTransaction();
 
             $user = $this->model->create($payloads);
-            
+
             if ($assignRole) {
                 $user->assignRole($assignRole);
             }
@@ -170,7 +175,7 @@ class AuthService implements AuthContract
                 ->first();
 
             if (!$user)
-                return new Exception('Email not register.');
+                return new Exception('Email not registered.');
 
             DB::beginTransaction();
 
@@ -213,7 +218,7 @@ class AuthService implements AuthContract
                 ->first();
 
             if (!Hash::check($payloads['otp'], $reset->otp)) {
-                return new Exception('OTP is invalid.');
+                return new Exception('OTP is incorrect.');
             }
 
             $reset->update([
@@ -250,7 +255,7 @@ class AuthService implements AuthContract
                 ->first();
 
             if (!Hash::check($payloads['token'], $reset->token)) {
-                return new Exception('Token is invalid.');
+                return new Exception('Token is incorrect.');
             }
 
             $this->model::where('email', $payloads['email'])
@@ -282,6 +287,97 @@ class AuthService implements AuthContract
 
             return $status === Password::RESET_LINK_SENT;
         } catch (Exception $exception) {
+            return $exception;
+        }
+    }
+
+    /**
+     * Send email verification link to user.
+     *
+     * @param array $payloads
+     * @return array|Exception
+     */
+    public function send_email_verification(array $payloads)
+    {
+        try {
+            $user = $this->model::query()
+                ->where('email', $payloads['email'])
+                ->first();
+
+            if (!$user) {
+                return new Exception('User not registered.');
+            }
+
+            if ($user->email_verified_at) {
+                return new Exception('Email already verified. Please login.');
+            }
+
+            $verificationToken = Str::random(64);
+            $verificationUrl = url("/user/verify-email?token={$verificationToken}&email=" . urlencode($payloads['email']));
+
+            DB::beginTransaction();
+
+            ($this->passwordResetTokenModel)::updateOrCreate(
+                ['email' => $payloads['email']],
+                [
+                    'token' => Hash::make($verificationToken),
+                    'token_expired' => Carbon::now()->addHours(24) // 24 hours expiry
+                ]
+            );
+
+            DB::commit();
+
+            Mail::to($payloads['email'])->queue(new EmailVerificationMail($verificationUrl, $user->name ?? ''));
+
+            return [
+                'email' => $payloads['email'],
+                'message' => 'Verification email sent successfully.'
+            ];
+        } catch (Exception $exception) {
+            DB::rollBack();
+            return $exception;
+        }
+    }
+
+    /**
+     * Verify user email with token.
+     *
+     * @param array $payloads
+     * @return bool|Exception
+     */
+    public function verify_email(array $payloads)
+    {
+        try {
+            DB::beginTransaction();
+
+            $reset = ($this->passwordResetTokenModel)::query()
+                ->where('email', $payloads['email'])
+                ->first();
+
+            if (!$reset || !$reset->token) {
+                return new Exception('Verification token is incorrect.');
+            }
+
+            if (!Hash::check($payloads['token'], $reset->token)) {
+                return new Exception('Verification token is incorrect.');
+            }
+
+            if ($reset->token_expired && Carbon::now()->isAfter($reset->token_expired)) {
+                return new Exception('Verification token has expired. Please request a new verification token.');
+            }
+
+            // Update user email verification status
+            $this->model::where('email', $payloads['email'])
+                ->update(['email_verified_at' => Carbon::now()]);
+
+            // Remove the verification token
+            $reset->delete();
+
+            DB::commit();
+
+            return true;
+        } catch (Exception $exception) {
+            DB::rollBack();
             return $exception;
         }
     }

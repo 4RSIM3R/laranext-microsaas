@@ -12,4 +12,6 @@ interface AuthContract
     public function validate_otp(array $payloads);
     public function reset_password(array $payloads);
     public function send_reset_link(array $payloads);
+    public function send_email_verification(array $payloads);
+    public function verify_email(array $payloads);
 }

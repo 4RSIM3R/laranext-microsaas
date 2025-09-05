@@ -9,6 +9,7 @@ use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Utils\WebResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
@@ -44,7 +45,15 @@ class UserAuthController extends Controller
         unset($payload['password_confirmation']);
         $payload['password'] = Hash::make($payload['password']);
         $result = $this->service->register($payload);
-        return WebResponse::response($result, "user.auth.login");
+
+        if ($result instanceof \Exception) {
+            return WebResponse::response($result, "user.auth.register");
+        }
+
+        return WebResponse::response(
+            $result,
+            "user.auth.resend-verification-page"
+        );
     }
 
     public function logout()
@@ -71,5 +80,54 @@ class UserAuthController extends Controller
     public function reset(ChangePasswordRequest $request)
     {
         $payload = $request->validated();
+    }
+
+    /**
+     * Handle email verification from email link
+     */
+    public function verify_email(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email'
+        ]);
+
+        $payload = $request->only(['token', 'email']);
+        $result = $this->service->verify_email($payload);
+
+        if ($result instanceof \Exception) {
+            return redirect()->route('user.auth.login')->with('error', $result->getMessage());
+        }
+
+        return redirect()->route('user.auth.login')->with('success', 'Email verified successfully! You can now login.');
+    }
+
+    /**
+     * Show resend verification page
+     */
+    public function resend_verification_page()
+    {
+        return Inertia::render('user/auth/verify-email');
+    }
+
+    /**
+     * Resend email verification
+     */
+    public function resend_verification(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $payload = $request->only(['email']);
+        $result = $this->service->send_email_verification($payload);
+
+        if ($result instanceof \Exception) {
+            return WebResponse::response($result, "user.auth.verify-email");
+        }
+
+        return WebResponse::response([
+            'message' => 'Verification email sent successfully!'
+        ], "user.auth.verify-email");
     }
 }
