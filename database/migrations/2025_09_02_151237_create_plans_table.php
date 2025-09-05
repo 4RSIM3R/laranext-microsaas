@@ -30,6 +30,9 @@ return new class extends Migration
             $table->unsignedInteger('prorate_extend_due')->nullable();
             $table->unsignedInteger('active_subscribers_limit')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
+            $table->string('stripe_price_id')->nullable()->unique();
+            $table->string('stripe_product_id')->nullable();
+            $table->string('currency', 3)->default('usd');
             $table->timestamps();
         });
     }

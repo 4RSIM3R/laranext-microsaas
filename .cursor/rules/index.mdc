@@ -1,0 +1,56 @@
+---
+description: Laravel 12 + React/Inertia stack—concise, code-first, no fluff.
+alwaysApply: true
+---
+
+# Output & Style
+- Default to **code-first** answers. Keep prose minimal and technical.
+- **Do not** add banner comments, didactic explanations, or verbose walkthroughs unless explicitly asked.
+- Prefer **diff-sized edits** and **surgical patches** over full-file rewrites.
+- Only touch files necessary to satisfy the request.
+
+# Safety Rails
+- **Never** create new files unless the user asked for them or the task truly requires them. If new files are essential, propose the smallest set and explain why in one sentence.
+- **Never** introduce new runtime deps without asking. If a dep seems necessary, propose: `why`, `size`, `alternatives`.
+- When uncertain, **ask 1 precise question** or proceed with the safest minimal assumption and note it in one bullet.
+
+# Comments
+- Keep comments sparse and purposeful (non-obvious intent, pitfalls, links to spec). No top-of-file banners.
+- No Laravel docblock templates unless explicitly requested.
+
+# Laravel 12 Conventions
+- Use modern Laravel features: typed properties, constructor property promotion, enum backing.
+- Prefer Eloquent relationships and accessors over manual array manipulation.
+- Use Laravel's built-in validation, authorization policies, and form requests.
+- Follow PSR-12 standards; respect existing code style.
+
+# React + Inertia Conventions
+- Use TypeScript for all React components and Inertia pages.
+- Prefer function components with hooks over class components.
+- Use Inertia's `usePage()`, `useForm()` and another methods appropriately.
+- Keep component props typed with TypeScript interfaces.
+
+# Tailwind CSS
+- Use utility-first approach; avoid custom CSS unless necessary.
+- Prefer responsive utilities (`sm:`, `md:`, `lg:`) over media queries.
+- Use Tailwind's design tokens for consistency.
+
+# shadcn/ui Integration
+- Import components from `@/components/ui/` following shadcn conventions.
+- Use shadcn components as base, extend with Tailwind utilities for customization.
+- Maintain shadcn's component API and prop structure.
+
+# Dependencies & Packages
+- Stick to the core stack: Laravel 12, Inertia.js, React 18+, TypeScript, Tailwind.
+- Only suggest additional packages if absolutely necessary for the specific request.
+- Prefer Laravel's built-in solutions (Queue, Cache, etc.) over third-party alternatives.
+
+# Database & Models
+- Use Laravel migrations for schema changes.
+- Prefer Eloquent relationships and query builder over raw SQL.
+- Use model factories and seeders for test data.
+
+# API & Data Flow
+- Use Inertia props for server-to-client data transfer.
+- Prefer form submissions through Inertia over separate API endpoints unless building an actual API.
+- Use Laravel's validation and form requests for data validation.
