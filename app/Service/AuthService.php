@@ -97,6 +97,7 @@ class AuthService implements AuthContract
             DB::beginTransaction();
 
             $user = $this->model->create($payloads);
+            
             if ($assignRole) {
                 $user->assignRole($assignRole);
             }

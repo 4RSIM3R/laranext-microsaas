@@ -9,6 +9,7 @@ use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Utils\WebResponse;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class UserAuthController extends Controller
@@ -40,6 +41,8 @@ class UserAuthController extends Controller
     public function store(RegisterRequest $request)
     {
         $payload = $request->validated();
+        unset($payload['password_confirmation']);
+        $payload['password'] = Hash::make($payload['password']);
         $result = $this->service->register($payload);
         return WebResponse::response($result, "user.auth.login");
     }

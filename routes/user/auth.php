@@ -3,7 +3,7 @@
 use App\Http\Controllers\Web\User\UserAuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['middleware' => 'guest', 'prefix' => 'auth', 'as' => 'auth.'], function () {
+Route::group(['middleware' => 'guest', 'prefix' => 'user', 'as' => 'auth.'], function () {
     Route::get('login', [UserAuthController::class, 'login'])->name('login');
     Route::post('login', [UserAuthController::class, 'authenticate'])->name('authenticate');
 
@@ -13,5 +13,4 @@ Route::group(['middleware' => 'guest', 'prefix' => 'auth', 'as' => 'auth.'], fun
     Route::group(['middleware' => 'auth'], function () {
         Route::post('logout', [UserAuthController::class, 'logout'])->name('logout');
     });
-   
 });

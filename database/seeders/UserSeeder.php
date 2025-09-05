@@ -2,23 +2,19 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Admin;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
-class AdminSeeder extends Seeder
+class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-        Admin::insert([
-            'name' => 'Administrator',
-            'email' => 'admin@gmail.com',
+        User::insert([
+            'name' => 'Example User',
+            'email' => 'user@gmail.com',
             'password' => Hash::make('password'),
             'email_verified_at' => Carbon::now(),
             'remember_token' => Str::random(10),
