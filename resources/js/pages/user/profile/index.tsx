@@ -1,3 +1,5 @@
+import UserLayout from "@/layouts/user-layout";
+
 export default function UserProfile() {
     return (
         <div>
@@ -5,3 +7,5 @@ export default function UserProfile() {
         </div>
     )
 }
+
+UserProfile.layout = (page: React.ReactNode) => <UserLayout>{page}</UserLayout>;

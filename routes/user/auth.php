@@ -14,6 +14,11 @@ Route::group(['middleware' => 'guest', 'prefix' => 'user', 'as' => 'auth.'], fun
     Route::get('resend-verification', [UserAuthController::class, 'resend_verification_page'])->name('resend-verification-page');
     Route::post('resend-verification', [UserAuthController::class, 'resend_verification'])->name('resend-verification');
 
+    Route::get('forgot-password', [UserAuthController::class, 'forgot'])->name('forgot-password');
+    Route::post('forgot-password', [UserAuthController::class, 'send_email'])->name('forgot-password.send-email');
+    Route::get('change-password', [UserAuthController::class, 'change'])->name('change-password');
+    Route::post('change-password', [UserAuthController::class, 'reset'])->name('change-password.reset');
+
     Route::group(['middleware' => 'auth'], function () {
         Route::post('logout', [UserAuthController::class, 'logout'])->name('logout');
     });
