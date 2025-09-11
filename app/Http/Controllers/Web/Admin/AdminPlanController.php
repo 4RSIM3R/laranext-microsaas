@@ -21,7 +21,16 @@ class AdminPlanController extends Controller
         return Inertia::render('admin/plan/index');
     }
 
-    public function fetch() {}
+    public function fetch()
+    {
+        $data = $this->service->all(
+            filters: [],
+            sorts: [],
+            paginate: true,
+            per_page: request()->get('per_page', 10)
+        );
+        return response()->json($data);
+    }
 
     public function show($id)
     {
@@ -39,14 +48,15 @@ class AdminPlanController extends Controller
     public function store(PlanRequest $request)
     {
         $plan = $this->service->create($request->validated());
+
+        return redirect()->route('admin.plan.index')->with('success', 'Plan created successfully');
     }
 
     public function update(PlanRequest $request, $id)
     {
-        $plan = $this->service->update($id, $request->validated());
-        return Inertia::render('admin/plan/form', [
-            'plan' => $plan
-        ]);
+        $plan = $this->service->update(['id' => $id], $request->validated());
+
+        return redirect()->route('admin.plan.index')->with('success', 'Plan updated successfully');
     }
 
     public function destroy($id)
