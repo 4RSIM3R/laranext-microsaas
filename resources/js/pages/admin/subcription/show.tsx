@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
-import { date_format } from '@/lib/utils';
+import { date_format } from '@/lib/format';
 import { Subscription } from '@/types/subcription';
 import { usePage } from '@inertiajs/react';
 
