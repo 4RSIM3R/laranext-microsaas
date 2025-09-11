@@ -25,7 +25,7 @@ class PlanRequest extends FormRequest
 
         return [
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:plans,slug,' . $planId,
+            'slug' => 'required|string|max:255|unique:plans,slug' . ($planId ? ',' . $planId : ''),
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'price' => 'required|numeric|min:0',
