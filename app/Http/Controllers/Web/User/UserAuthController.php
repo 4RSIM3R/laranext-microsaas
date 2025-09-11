@@ -8,8 +8,10 @@ use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Models\Plan;
 use App\Utils\WebResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
@@ -31,12 +33,15 @@ class UserAuthController extends Controller
     {
         $payload = $request->validated();
         $result = $this->service->login($payload);
-        return WebResponse::response($result, "user.dashboard.index");
+        return WebResponse::response($result, "user.dashboard.onboarding");
     }
 
     public function register()
     {
-        return Inertia::render('user/auth/register');
+        $plan = Plan::query()->where('is_active', true)->get();
+        return Inertia::render('user/auth/register', [
+            'plans' => $plan
+        ]);
     }
 
     public function store(RegisterRequest $request)
@@ -52,7 +57,7 @@ class UserAuthController extends Controller
 
         return WebResponse::response(
             $result,
-            "user.auth.resend-verification-page"
+            "user.auth.login"
         );
     }
 

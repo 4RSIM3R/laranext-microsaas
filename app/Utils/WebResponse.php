@@ -48,4 +48,22 @@ class WebResponse
             ], $status);
         }
     }
+
+    public static function success($message = 'Success', $data = null, $status = 200)
+    {
+        return response()->json([
+            "message" => $message,
+            "data" => $data,
+            "success" => true,
+        ], $status);
+    }
+
+    public static function error($message = 'Error', $data = null, $status = 400)
+    {
+        return response()->json([
+            "message" => $message,
+            "data" => $data,
+            "success" => false,
+        ], $status);
+    }
 }

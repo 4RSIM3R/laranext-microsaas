@@ -50,7 +50,7 @@ class Plan extends Model
 
     public function subscriptions(): HasMany
     {
-        return $this->hasMany(Subcription::class);
+        return $this->hasMany(\Laravel\Cashier\Subscription::class, 'stripe_price', 'stripe_price_id');
     }
 
     public function features(): HasMany
@@ -71,5 +71,29 @@ class Plan extends Model
     public function getSignupFeeInCents(): int
     {
         return (int) ($this->signup_fee * 100);
+    }
+
+    public function getFormattedPrice(): string
+    {
+        return number_format((float) $this->price, 2);
+    }
+
+    public function hasFreeTrial(): bool
+    {
+        return $this->trial_period > 0;
+    }
+
+    public function getTrialDescription(): string
+    {
+        if (!$this->hasFreeTrial()) {
+            return '';
+        }
+
+        return $this->trial_period . ' ' . $this->trial_interval . ($this->trial_period > 1 ? 's' : '') . ' free trial';
+    }
+
+    public function isPopular(): bool
+    {
+        return $this->sort_order === 1;
     }
 }

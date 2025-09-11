@@ -36,6 +36,7 @@ type FormData = {
     active_subscribers_limit: string | number | null;
     sort_order: string | number;
     currency: string;
+    stripe_price_id: string;
     features: {
         name: string;
         slug: string;
@@ -81,6 +82,7 @@ export default function PlanForm({ plan }: Props) {
         active_subscribers_limit: plan?.active_subscribers_limit || null,
         sort_order: plan?.sort_order || 0,
         currency: plan?.currency || 'USD',
+        stripe_price_id: plan?.stripe_price_id || '',
         features:
             plan?.features?.map((f) => ({
                 name: f.name,
@@ -300,6 +302,26 @@ export default function PlanForm({ plan }: Props) {
                                 </SelectContent>
                             </Select>
                             <InputError message={errors?.invoice_interval} />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg font-semibold">Stripe Integration</CardTitle>
+                        <CardDescription>Connect this plan to Stripe for payment processing.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="stripe_price_id">Stripe Price ID</Label>
+                            <Input
+                                id="stripe_price_id"
+                                value={data.stripe_price_id}
+                                onChange={(e) => setData('stripe_price_id', e.target.value)}
+                                placeholder="price_1ABC123def456..."
+                            />
+                            <InputError message={errors?.stripe_price_id} />
+                            <p className="text-xs text-gray-500">The Stripe Price ID from your Stripe dashboard</p>
                         </div>
                     </CardContent>
                 </Card>

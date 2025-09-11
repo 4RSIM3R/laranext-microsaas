@@ -1,7 +1,18 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/layouts/admin-layout';
+import { SharedData } from '@/types';
+import { usePage } from '@inertiajs/react';
+
+interface DashboardProps extends SharedData {
+    mrr: string;
+    arr: string;
+    totalUsers: string;
+    lastUpdated: string;
+}
 
 export default function AdminDashboard() {
+    const { mrr, arr, totalUsers, lastUpdated } = usePage<DashboardProps>().props;
+
     return (
         <div className="grid grid-cols-12 gap-4">
             <Card className="col-span-4">
@@ -10,10 +21,10 @@ export default function AdminDashboard() {
                     <CardDescription>Annual Recurring Revenue</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">$100,000</div>
+                    <div className="text-2xl font-bold">${arr}</div>
                 </CardContent>
                 <CardFooter>
-                    <p className="text-xs text-muted-foreground">Calculated since 1 January 2025 - Last updated 11 September 2025</p>
+                    <p className="text-xs text-muted-foreground">Based on current active subscriptions - Last updated {lastUpdated}</p>
                 </CardFooter>
             </Card>
             <Card className="col-span-4">
@@ -22,10 +33,10 @@ export default function AdminDashboard() {
                     <CardDescription>Monthly Recurring Revenue</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">100,000</div>
+                    <div className="text-2xl font-bold">${mrr}</div>
                 </CardContent>
                 <CardFooter>
-                    <p className="text-xs text-muted-foreground">Calculated since 1 January 2025 - Last updated 11 September 2025</p>
+                    <p className="text-xs text-muted-foreground">Current month active subscriptions - Last updated {lastUpdated}</p>
                 </CardFooter>
             </Card>
             <Card className="col-span-4">
@@ -34,10 +45,10 @@ export default function AdminDashboard() {
                     <CardDescription>Total registered users</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">100,000</div>
+                    <div className="text-2xl font-bold">{totalUsers}</div>
                 </CardContent>
                 <CardFooter>
-                    <p className="text-xs text-muted-foreground">Calculated since 1 January 2025 - Last updated 11 September 2025</p>
+                    <p className="text-xs text-muted-foreground">All registered users - Last updated {lastUpdated}</p>
                 </CardFooter>
             </Card>
         </div>

@@ -35,7 +35,7 @@ import plan from '@/routes/admin/plan';
 import dashboard from '@/routes/admin/dashboard';
 import setting from '@/routes/admin/setting';
 import user from '@/routes/admin/user';
-import transaction from '@/routes/admin/transaction';
+import subcription from '@/routes/admin/subcription';
 
 type AdminLayoutProps = {
     children: React.ReactNode;
@@ -68,7 +68,7 @@ const navigations: MenuGroup[] = [
                 id: 'transaction',
                 title: 'Transaction',
                 icon: Receipt,
-                url: transaction.index().url,
+                url: subcription.index().url,
             },
             {
                 id: 'user',

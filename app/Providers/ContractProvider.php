@@ -11,6 +11,7 @@ use App\Contract\Setting\AppSettingContract;
 use App\Contract\Setting\SystemSettingContract;
 use App\Contract\Auth\UserAuthContract;
 use App\Contract\Auth\AdminAuthContract;
+use App\Contract\Operational\SubcriptionContract;
 use App\Service\Auth\UserAuthService;
 use App\Service\Auth\AdminAuthService;
 use App\Service\BaseService;
@@ -18,6 +19,7 @@ use App\Service\AuthService;
 use App\Service\Master\FeatureService;
 use App\Service\Master\PlanService;
 use App\Service\Master\UserService;
+use App\Service\Operational\SubcriptionService;
 use App\Service\Setting\AppSettingService;
 use App\Service\Setting\SystemSettingService;
 use Illuminate\Support\ServiceProvider;
@@ -38,6 +40,8 @@ class ContractProvider extends ServiceProvider
          */
         $this->app->bind(UserAuthContract::class, UserAuthService::class);
         $this->app->bind(AdminAuthContract::class, AdminAuthService::class);
+
+        $this->app->bind(SubcriptionContract::class, SubcriptionService::class);
 
         /**
          * Master Service Contract.

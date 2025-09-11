@@ -21,7 +21,7 @@ class PlanRequest extends FormRequest
      */
     public function rules(): array
     {
-        $planId = $this->route('id') ?? $this->route('plan');
+        $planId = $this->route('id');
 
         return [
             'name' => 'required|string|max:255',
@@ -42,6 +42,7 @@ class PlanRequest extends FormRequest
             'active_subscribers_limit' => 'nullable|integer|min:1',
             'sort_order' => 'integer|min:0',
             'currency' => 'required|string|size:3',
+            'stripe_price_id' => 'nullable|string|max:255',
 
             // Features validation
             'features' => 'array',

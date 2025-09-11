@@ -76,9 +76,9 @@ class AuthService implements AuthContract
                 return new Exception('Password incorrect.');
             }
 
-            if (!$user->email_verified_at) {
-                return new Exception('Email not verified.');
-            }
+            // if (!$user->email_verified_at) {
+            //     return new Exception('Email not verified.');
+            // }
 
             if (!$login = Auth::guard($this->guard)->attempt($credentials)) {
                 return new Exception($this->username . ' or password incorrect.');

@@ -31,6 +31,7 @@ import { useForm, usePage } from '@inertiajs/react';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { Building2, ChevronsUpDown, Home, LogOut, Settings, User } from 'lucide-react';
 import { Toaster } from 'sonner';
+import dashboard from '@/routes/user/dashboard';
 
 type UserLayoutProps = {
     children: React.ReactNode;
@@ -45,7 +46,7 @@ const navigations: MenuGroup[] = [
                 id: 'dashboard',
                 title: 'Dashboard',
                 icon: Home,
-                url: '',
+                url: dashboard.index.url(),
             },
         ],
     },
