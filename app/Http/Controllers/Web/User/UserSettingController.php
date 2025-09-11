@@ -8,7 +8,7 @@ use App\Http\Requests\SettingRequest;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-class AppSettingController extends Controller
+class UserSettingController extends Controller
 {
 
     protected AppSettingContract $service;

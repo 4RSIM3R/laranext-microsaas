@@ -29,8 +29,13 @@ import type { SharedData } from '@/types';
 import type { MenuGroup } from '@/types/ui';
 import { useForm, usePage } from '@inertiajs/react';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import { Building2, ChevronsUpDown, Home, LogOut, Pencil, Receipt, Settings, SunIcon, User, User2 } from 'lucide-react';
+import { Building2, ChevronsUpDown, Home, LogOut, Pencil, Receipt, Settings, User, User2 } from 'lucide-react';
 import { Toaster } from 'sonner';
+import plan from '@/routes/admin/plan';
+import dashboard from '@/routes/admin/dashboard';
+import setting from '@/routes/admin/setting';
+import user from '@/routes/admin/user';
+import transaction from '@/routes/admin/transaction';
 
 type AdminLayoutProps = {
     children: React.ReactNode;
@@ -45,7 +50,7 @@ const navigations: MenuGroup[] = [
                 id: 'dashboard',
                 title: 'Dashboard',
                 icon: Home,
-                url: '',
+                url: dashboard.index().url,
             },
         ],
     },
@@ -57,19 +62,19 @@ const navigations: MenuGroup[] = [
                 id: 'plan',
                 title: 'Plan',
                 icon: Pencil,
-                url: '',
+                url: plan.index().url,
             },
             {
-                id: 'subscription',
-                title: 'Subscription',
+                id: 'transaction',
+                title: 'Transaction',
                 icon: Receipt,
-                url: '',
+                url: transaction.index().url,
             },
             {
                 id: 'user',
                 title: 'User',
                 icon: User2,
-                url: '',
+                url: user.index().url,
             },
         ],
     },
@@ -81,13 +86,7 @@ const navigations: MenuGroup[] = [
                 id: 'system',
                 title: 'System Setting',
                 icon: Settings,
-                url: '',
-            },
-            {
-                id: 'appearance',
-                title: 'Appearance Setting',
-                icon: SunIcon,
-                url: '',
+                url: setting.index().url,
             },
         ],
     },
