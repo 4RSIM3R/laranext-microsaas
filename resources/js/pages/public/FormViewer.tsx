@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import axios from 'axios';
+import submissions from '@/routes/submissions';
 
 interface FormField {
     id: number;
@@ -89,6 +91,7 @@ interface FormViewerProps {
 
 export default function FormViewer({ form, isPreview = false }: FormViewerProps) {
     const [currentPageIndex, setCurrentPageIndex] = useState(0);
+    const [navigationHistory, setNavigationHistory] = useState<number[]>([0]);
     const [formData, setFormData] = useState<Record<string, any>>({});
     const [showJson, setShowJson] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,22 +101,22 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
     const progress = form.pages ? ((currentPageIndex + 1) / form.pages.length) * 100 : 0;
 
     const handleFieldChange = (fieldName: string, value: any) => {
-        setFormData(prev => {
+        setFormData((prev) => {
             // For checkbox fields, we need to handle array values
             if (Array.isArray(value)) {
                 return {
                     ...prev,
-                    [fieldName]: value
+                    [fieldName]: value,
                 };
             }
             return {
                 ...prev,
-                [fieldName]: value
+                [fieldName]: value,
             };
         });
     };
 
-      const evaluateCondition = (rule: ConditionalRule, formData: Record<string, any>): boolean => {
+    const evaluateCondition = (rule: ConditionalRule, formData: Record<string, any>): boolean => {
         const fieldValue = formData[rule.field];
 
         switch (rule.operator) {
@@ -159,13 +162,16 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
 
                     // Fallback to ID-based navigation
                     if (rule.next_page_id !== undefined) {
-                        const targetPageIndex = form.pages?.findIndex(page => page.id === rule.next_page_id);
+                        const targetPageIndex = form.pages?.findIndex((page) => page.id === rule.next_page_id);
                         if (targetPageIndex !== undefined && targetPageIndex !== -1) {
                             console.log(`Found target page: ${rule.next_page_id} at index ${targetPageIndex}`);
                             return targetPageIndex;
                         } else {
                             console.log(`Could not find page with ID: ${rule.next_page_id}`);
-                            console.log('Available pages:', form.pages?.map(p => ({ id: p.id, title: p.title })));
+                            console.log(
+                                'Available pages:',
+                                form.pages?.map((p) => ({ id: p.id, title: p.title })),
+                            );
                         }
                     }
                 }
@@ -174,13 +180,13 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
 
         // Check for simple next_page_id
         if (currentPage.conditional_logic?.next_page_id !== undefined && currentPage.conditional_logic?.next_page_id !== null) {
-            const targetPageIndex = form.pages?.findIndex(page => page.id === currentPage.conditional_logic?.next_page_id);
+            const targetPageIndex = form.pages?.findIndex((page) => page.id === currentPage.conditional_logic?.next_page_id);
             return targetPageIndex !== -1 ? targetPageIndex! : null;
         }
 
         // Check for default_next_page_id
         if (currentPage.conditional_logic?.default_next_page_id !== undefined && currentPage.conditional_logic?.default_next_page_id !== null) {
-            const targetPageIndex = form.pages?.findIndex(page => page.id === currentPage.conditional_logic?.default_next_page_id);
+            const targetPageIndex = form.pages?.findIndex((page) => page.id === currentPage.conditional_logic?.default_next_page_id);
             return targetPageIndex !== -1 ? targetPageIndex! : null;
         }
 
@@ -200,6 +206,8 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
         const nextIndex = getNextPageIndex(currentPage, formData);
 
         if (nextIndex !== null && nextIndex >= 0) {
+            // Add current page to navigation history
+            setNavigationHistory(prev => [...prev, currentPageIndex]);
             setCurrentPageIndex(nextIndex);
         } else {
             handleSubmit();
@@ -207,8 +215,11 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
     };
 
     const handlePrevious = () => {
-        if (currentPageIndex > 0) {
-            setCurrentPageIndex(prev => prev - 1);
+        if (navigationHistory.length > 1) {
+            // Remove current page from history and go back to previous page
+            const newHistory = navigationHistory.slice(0, -1);
+            setNavigationHistory(newHistory);
+            setCurrentPageIndex(newHistory[newHistory.length - 1]);
         }
     };
 
@@ -266,14 +277,43 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
 
         setIsSubmitting(true);
 
-        // Simulate form submission
-        console.log('Form submitted:', formData);
+        try {
+            console.log('Form submitted:', formData);
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+            // Prepare submission payload
+            const submissionData = {
+                form_id: form.id,
+                data: formData,
+                metadata: {
+                    user_agent: navigator.userAgent,
+                    referrer: document.referrer,
+                    viewport: {
+                        width: window.innerWidth,
+                        height: window.innerHeight,
+                    },
+                },
+            };
 
-        setIsSubmitting(false);
-        setIsSubmitted(true);
+            // Make API call
+            const response = await axios.post(submissions.submit().url, submissionData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('Submission response:', response.data);
+
+            if (response.data.success) {
+                setIsSubmitted(true);
+            } else {
+                alert('Submission failed: ' + (response.data.message || 'Unknown error'));
+            }
+        } catch (error: any) {
+            console.error('Submission error:', error);
+            alert('Submission failed: ' + (error.response?.data?.message || error.message || 'Network error'));
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const renderField = (field: FormField) => {
@@ -284,7 +324,7 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                 handleFieldChange(field.name, e.target.value),
             placeholder: field.placeholder,
             required: field.required,
-            className: field.settings?.show_label !== false ? 'mt-1' : ''
+            className: field.settings?.show_label !== false ? 'mt-1' : '',
         };
 
         switch (field.type) {
@@ -298,16 +338,11 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                         {field.settings?.show_label !== false && (
                             <Label htmlFor={field.name}>
                                 {field.label}
-                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                                {field.required && <span className="ml-1 text-red-500">*</span>}
                             </Label>
                         )}
-                        <Input
-                            type={field.type}
-                            {...commonProps}
-                        />
-                        {field.help_text && (
-                            <p className="text-sm text-muted-foreground">{field.help_text}</p>
-                        )}
+                        <Input type={field.type} {...commonProps} />
+                        {field.help_text && <p className="text-sm text-muted-foreground">{field.help_text}</p>}
                     </div>
                 );
 
@@ -317,16 +352,11 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                         {field.settings?.show_label !== false && (
                             <Label htmlFor={field.name}>
                                 {field.label}
-                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                                {field.required && <span className="ml-1 text-red-500">*</span>}
                             </Label>
                         )}
-                        <Textarea
-                            {...commonProps}
-                            maxLength={field.settings?.max_length}
-                        />
-                        {field.help_text && (
-                            <p className="text-sm text-muted-foreground">{field.help_text}</p>
-                        )}
+                        <Textarea {...commonProps} maxLength={field.settings?.max_length} />
+                        {field.help_text && <p className="text-sm text-muted-foreground">{field.help_text}</p>}
                     </div>
                 );
 
@@ -336,27 +366,24 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                         {field.settings?.show_label !== false && (
                             <Label htmlFor={field.name}>
                                 {field.label}
-                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                                {field.required && <span className="ml-1 text-red-500">*</span>}
                             </Label>
                         )}
-                        <Select
-                            value={formData[field.name] ?? ''}
-                            onValueChange={(value) => handleFieldChange(field.name, value)}
-                        >
+                        <Select value={formData[field.name] ?? ''} onValueChange={(value) => handleFieldChange(field.name, value)}>
                             <SelectTrigger>
                                 <SelectValue placeholder={field.placeholder || 'Select an option'} />
                             </SelectTrigger>
                             <SelectContent>
-                                {field.options?.filter(option => option.value !== '').map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
+                                {field.options
+                                    ?.filter((option) => option.value !== '')
+                                    .map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
                             </SelectContent>
                         </Select>
-                        {field.help_text && (
-                            <p className="text-sm text-muted-foreground">{field.help_text}</p>
-                        )}
+                        {field.help_text && <p className="text-sm text-muted-foreground">{field.help_text}</p>}
                     </div>
                 );
 
@@ -366,13 +393,10 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                         {field.settings?.show_label !== false && (
                             <Label>
                                 {field.label}
-                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                                {field.required && <span className="ml-1 text-red-500">*</span>}
                             </Label>
                         )}
-                        <RadioGroup
-                            value={formData[field.name] ?? ''}
-                            onValueChange={(value) => handleFieldChange(field.name, value)}
-                        >
+                        <RadioGroup value={formData[field.name] ?? ''} onValueChange={(value) => handleFieldChange(field.name, value)}>
                             {field.options?.map((option) => (
                                 <div key={option.value} className="flex items-center space-x-2">
                                     <RadioGroupItem value={option.value} id={field.name + option.value} />
@@ -380,9 +404,7 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                                 </div>
                             ))}
                         </RadioGroup>
-                        {field.help_text && (
-                            <p className="text-sm text-muted-foreground">{field.help_text}</p>
-                        )}
+                        {field.help_text && <p className="text-sm text-muted-foreground">{field.help_text}</p>}
                     </div>
                 );
 
@@ -395,7 +417,7 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                             {field.settings?.show_label !== false && (
                                 <Label>
                                     {field.label}
-                                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                                    {field.required && <span className="ml-1 text-red-500">*</span>}
                                 </Label>
                             )}
                             <div className="space-y-2">
@@ -411,15 +433,11 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                                                 handleFieldChange(field.name, newValues);
                                             }}
                                         />
-                                        <Label htmlFor={field.name + option.value}>
-                                            {option.label}
-                                        </Label>
+                                        <Label htmlFor={field.name + option.value}>{option.label}</Label>
                                     </div>
                                 ))}
                             </div>
-                            {field.help_text && (
-                                <p className="text-sm text-muted-foreground">{field.help_text}</p>
-                            )}
+                            {field.help_text && <p className="text-sm text-muted-foreground">{field.help_text}</p>}
                         </div>
                     );
                 }
@@ -436,13 +454,11 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                             {field.settings?.show_label !== false && (
                                 <Label htmlFor={field.name}>
                                     {field.label}
-                                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                                    {field.required && <span className="ml-1 text-red-500">*</span>}
                                 </Label>
                             )}
                         </div>
-                        {field.help_text && (
-                            <p className="text-sm text-muted-foreground">{field.help_text}</p>
-                        )}
+                        {field.help_text && <p className="text-sm text-muted-foreground">{field.help_text}</p>}
                     </div>
                 );
 
@@ -458,7 +474,7 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
 
     if (!currentPage) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="flex min-h-screen items-center justify-center">
                 <Card>
                     <CardContent className="p-6">
                         <p className="text-center">Form not found or has no pages.</p>
@@ -471,25 +487,28 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
     if (isSubmitted) {
         return (
             <div
-                className="min-h-screen flex items-center justify-center p-4"
+                className="flex min-h-screen items-center justify-center p-4"
                 style={{
                     backgroundColor: form.settings.theme.background_color,
-                    color: form.settings.theme.text_color
+                    color: form.settings.theme.text_color,
                 }}
             >
                 <div className="w-full max-w-2xl">
                     <Card className="shadow-lg">
-                        <CardContent className="p-8 text-center space-y-6">
+                        <CardContent className="space-y-6 p-8 text-center">
                             <div className="text-green-500">
-                                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg className="mx-auto h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
                                 </svg>
                             </div>
                             <div className="space-y-2">
                                 <h1 className="text-2xl font-bold">Thank You!</h1>
-                                <p className="text-muted-foreground">
-                                    Your submission has been received successfully.
-                                </p>
+                                <p className="text-muted-foreground">Your submission has been received successfully.</p>
                             </div>
                             <div className="text-sm text-muted-foreground">
                                 <p>We'll get back to you soon.</p>
@@ -503,10 +522,10 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
 
     return (
         <div
-            className="min-h-screen flex items-center justify-center p-4"
+            className="flex min-h-screen items-center justify-center p-4"
             style={{
                 backgroundColor: form.settings.theme.background_color,
-                color: form.settings.theme.text_color
+                color: form.settings.theme.text_color,
             }}
         >
             <div className="w-full max-w-2xl">
@@ -514,7 +533,7 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                 {isPreview && (
                     <div className="mb-4 flex justify-center">
                         <Badge variant="secondary" className="flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4" />
+                            <AlertCircle className="h-4 w-4" />
                             Preview Mode
                         </Badge>
                     </div>
@@ -526,11 +545,7 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                         <CardTitle className="text-2xl" style={{ color: form.settings.theme.text_color }}>
                             {form.name}
                         </CardTitle>
-                        {form.description && (
-                            <CardDescription className="text-base">
-                                {form.description}
-                            </CardDescription>
-                        )}
+                        {form.description && <CardDescription className="text-base">{form.description}</CardDescription>}
                     </CardHeader>
 
                     <CardContent className="space-y-6">
@@ -538,7 +553,9 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                         {currentPage.settings?.progress_bar && form.pages && form.pages.length > 1 && (
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span>Step {currentPageIndex + 1} of {form.pages.length}</span>
+                                    <span>
+                                        Step {currentPageIndex + 1} of {form.pages.length}
+                                    </span>
                                     <span>{Math.round(progress)}%</span>
                                 </div>
                                 <Progress value={progress} className="h-2" />
@@ -547,28 +564,20 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
 
                         {/* Current Page */}
                         <div className="space-y-4">
-                            <div className="text-center space-y-2">
+                            <div className="space-y-2 text-center">
                                 <h2 className="text-xl font-semibold">{currentPage.title}</h2>
-                                {currentPage.description && (
-                                    <p className="text-muted-foreground">{currentPage.description}</p>
-                                )}
+                                {currentPage.description && <p className="text-muted-foreground">{currentPage.description}</p>}
                             </div>
 
                             <Separator />
 
-                            <div className="space-y-4">
-                                {currentPage.fields?.map(renderField)}
-                            </div>
+                            <div className="space-y-4">{currentPage.fields?.map(renderField)}</div>
                         </div>
 
                         {/* Navigation Buttons */}
                         <div className="flex justify-between">
-                            {currentPageIndex > 0 && (
-                                <Button
-                                    variant="outline"
-                                    onClick={handlePrevious}
-                                    disabled={isSubmitting}
-                                >
+                            {navigationHistory.length > 1 && (
+                                <Button variant="outline" onClick={handlePrevious} disabled={isSubmitting}>
                                     Previous
                                 </Button>
                             )}
@@ -581,11 +590,11 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                                 className={getButtonStyle()}
                                 style={{ backgroundColor: form.settings.theme.primary_color }}
                             >
-                                {isSubmitting ? 'Submitting...' : (
-                                    currentPageIndex < (form.pages?.length || 0) - 1
-                                        ? currentPage.settings?.button_text || 'Continue'
-                                        : currentPage.settings?.button_text || 'Submit'
-                                )}
+                                {isSubmitting
+                                    ? 'Submitting...'
+                                    : currentPageIndex < (form.pages?.length || 0) - 1
+                                      ? currentPage.settings?.button_text || 'Continue'
+                                      : currentPage.settings?.button_text || 'Submit'}
                             </Button>
                         </div>
                     </CardContent>
@@ -593,13 +602,8 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
 
                 {/* JSON Viewer Toggle */}
                 <div className="mt-4 text-center">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowJson(!showJson)}
-                        className="flex items-center gap-2"
-                    >
-                        {showJson ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <Button variant="outline" size="sm" onClick={() => setShowJson(!showJson)} className="flex items-center gap-2">
+                        {showJson ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         {showJson ? 'Hide JSON' : 'Show JSON'}
                     </Button>
                 </div>
@@ -611,28 +615,34 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
                             <CardTitle className="text-lg">Form Data (JSON)</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="bg-muted p-4 rounded-md overflow-auto max-h-96">
+                            <div className="max-h-96 overflow-auto rounded-md bg-muted p-4">
                                 <pre className="text-sm">
-                                    <code>{JSON.stringify({
-                                        form: {
-                                            id: form.id,
-                                            name: form.name,
-                                            slug: form.slug,
-                                            description: form.description,
-                                            settings: form.settings,
-                                            is_active: form.is_active
-                                        },
-                                        currentPage: {
-                                            index: currentPageIndex,
-                                            id: currentPage.id,
-                                            title: currentPage.title,
-                                            description: currentPage.description,
-                                            settings: currentPage.settings,
-                                            conditionalLogic: currentPage.conditional_logic
-                                        },
-                                        formData: formData,
-                                        progress: `${Math.round(progress)}%`
-                                    }, null, 2)}</code>
+                                    <code>
+                                        {JSON.stringify(
+                                            {
+                                                form: {
+                                                    id: form.id,
+                                                    name: form.name,
+                                                    slug: form.slug,
+                                                    description: form.description,
+                                                    settings: form.settings,
+                                                    is_active: form.is_active,
+                                                },
+                                                currentPage: {
+                                                    index: currentPageIndex,
+                                                    id: currentPage.id,
+                                                    title: currentPage.title,
+                                                    description: currentPage.description,
+                                                    settings: currentPage.settings,
+                                                    conditionalLogic: currentPage.conditional_logic,
+                                                },
+                                                formData: formData,
+                                                progress: `${Math.round(progress)}%`,
+                                            },
+                                            null,
+                                            2,
+                                        )}
+                                    </code>
                                 </pre>
                             </div>
                         </CardContent>
