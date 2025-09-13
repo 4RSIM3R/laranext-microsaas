@@ -33,6 +33,8 @@ import { Building2, ChevronsUpDown, FileEdit, Home, LogOut, Settings, User } fro
 import { Toaster } from 'sonner';
 import dashboard from '@/routes/user/dashboard';
 import profile from '@/routes/user/profile';
+import form from '@/routes/user/form';
+import setting from '@/routes/user/setting';
 
 type UserLayoutProps = {
     children: React.ReactNode;
@@ -53,7 +55,7 @@ const navigations: MenuGroup[] = [
                 id: 'form',
                 title: 'Form',
                 icon: FileEdit,
-                url: dashboard.index.url(),
+                url: form.index.url(),
             },
         ],
     },
@@ -71,7 +73,7 @@ const navigations: MenuGroup[] = [
                 id: 'setting',
                 title: 'Setting',
                 icon: Settings,
-                url: '',
+                url: setting.index.url(),
             },
         ],
     },
