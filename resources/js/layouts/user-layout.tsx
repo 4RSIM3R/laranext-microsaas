@@ -32,6 +32,7 @@ import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { Building2, ChevronsUpDown, Home, LogOut, Settings, User } from 'lucide-react';
 import { Toaster } from 'sonner';
 import dashboard from '@/routes/user/dashboard';
+import profile from '@/routes/user/profile';
 
 type UserLayoutProps = {
     children: React.ReactNode;
@@ -54,6 +55,12 @@ const navigations: MenuGroup[] = [
         id: 'settings',
         title: 'Setting',
         items: [
+            {
+                id: 'profile',
+                title: 'Profile',
+                icon: User,
+                url: profile.index.url(),
+            },
             {
                 id: 'setting',
                 title: 'Setting',
