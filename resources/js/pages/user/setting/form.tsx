@@ -1,3 +1,5 @@
+import UserLayout from "@/layouts/user-layout";
+
 export default function UserSettingForm() {
     return (
         <div>
@@ -5,3 +7,5 @@ export default function UserSettingForm() {
         </div>
     )
 }
+
+UserSettingForm.layout = (page: React.ReactNode) => <UserLayout>{page}</UserLayout>;

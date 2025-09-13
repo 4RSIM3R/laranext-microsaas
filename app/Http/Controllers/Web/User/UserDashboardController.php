@@ -23,22 +23,22 @@ class UserDashboardController extends Controller
         $plans = Plan::query()->orderBy('sort_order')->get();
         return Inertia::render('user/onboarding', [
             'plans' => $plans,
-            'stripeKey' => config('cashier.key')
+            'stripeKey' => config('cashier.key'),
+            'stripePublishableKey' => config('cashier.key')
         ]);
     }
 
-    public function subscribe(SubscriptionRequest $request)
+    public function createCheckoutSession(Request $request)
     {
         try {
             $user = Auth::guard("user")->user();
-            $plan = Plan::findOrFail($request->validated()['plan_id']);
+            $plan = Plan::findOrFail($request->plan_id);
 
             // Check if user already has an active subscription
             if ($user->subscribed('default')) {
-                return WebResponse::response(
-                    new \Exception('You already have an active subscription.'),
-                    'user.dashboard.onboarding'
-                );
+                return response()->json([
+                    'error' => 'You already have an active subscription.'
+                ], 400);
             }
 
             // Create Stripe customer if not exists
@@ -46,37 +46,54 @@ class UserDashboardController extends Controller
                 $user->createAsStripeCustomer();
             }
 
-            // Add payment method
-            $user->addPaymentMethod($request->validated()['payment_method']);
-
-            // Create subscription
-            $subscription = $user->newSubscription('default', $plan->stripe_price_id);
+            // Create checkout session with trial support
+            $checkoutOptions = [
+                'success_url' => route('user.dashboard.checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('user.dashboard.onboarding'),
+                'mode' => 'subscription',
+                'metadata' => [
+                    'plan_id' => $plan->id,
+                    'user_id' => $user->id,
+                ],
+            ];
 
             // Add trial period if plan has one
             if ($plan->trial_period > 0) {
                 $trialEnds = now()->add($plan->trial_interval, $plan->trial_period);
-                $subscription->trialUntil($trialEnds);
-
-                // For trials, we still need a payment method but won't charge immediately
-                $subscription->create($request->validated()['payment_method']);
-            } else {
-                // No trial, charge immediately
-                $subscription->create($request->validated()['payment_method']);
+                $checkoutOptions['subscription_data'] = [
+                    'trial_end' => $trialEnds->timestamp,
+                ];
             }
 
-            $message = $plan->trial_period > 0
-                ? "Your {$plan->trial_period} {$plan->trial_interval} free trial has started!"
-                : 'Subscription created successfully!';
+            $checkout = $user->checkout([$plan->stripe_price_id => 1], $checkoutOptions);
 
-            return WebResponse::response(
-                $message,
-                'user.dashboard.index'
-            );
+            return response()->json([
+                'sessionId' => $checkout->id,
+            ]);
         } catch (\Exception $e) {
-            return WebResponse::response(
-                $e,
-                'user.dashboard.onboarding'
-            );
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
         }
+    }
+
+    public function checkoutSuccess(Request $request)
+    {
+        $sessionId = $request->get('session_id');
+
+        if (!$sessionId) {
+            return redirect()->route('user.dashboard.onboarding');
+        }
+
+        // Verify the checkout session and handle success
+        return Inertia::render('user/onboarding-success', [
+            'sessionId' => $sessionId
+        ]);
+    }
+
+    public function subscribe()
+    {
+        // Keep this method for backward compatibility or remove if not needed
+        return redirect()->route('user.dashboard.onboarding');
     }
 }
