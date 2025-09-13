@@ -1,107 +1,52 @@
-import { useEffect, useState } from "react";
-import UserLayout from "@/layouts/user-layout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Save, Shield } from "lucide-react";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import UserLayout from '@/layouts/user-layout';
+import { FormResponse } from '@/lib/constant';
+import profile from '@/routes/user/profile';
+import { User } from '@/types/user';
+import { useForm } from '@inertiajs/react';
+import { Loader2, Save, Shield } from 'lucide-react';
+import React from 'react';
 
-interface User {
-    id: number;
+interface ProfileFormData {
     name: string;
     email: string;
-    created_at?: string;
-    updated_at?: string;
 }
 
-export default function UserProfile() {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+interface PasswordFormData {
+    current_password: string;
+    password: string;
+    password_confirmation: string;
+}
 
-    // Profile form state
-    const [profileForm, setProfileForm] = useState({
-        name: "",
-        email: ""
+type Props = {
+    user: User;
+};
+
+export default function UserProfile({ user }: Props) {
+    // Profile form using useForm
+    const profileForm = useForm<ProfileFormData>({
+        name: user.name,
+        email: user.email,
     });
 
-    // Password form state
-    const [passwordForm, setPasswordForm] = useState({
-        current_password: "",
-        password: "",
-        password_confirmation: ""
+    const passwordForm = useForm<PasswordFormData>({
+        current_password: '',
+        password: '',
+        password_confirmation: '',
     });
 
-    const handleProfileSubmit = async (e: React.FormEvent) => {
+    const handleProfileSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
-
-        try {
-            const response = await fetch("/dashboard/profile/update", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ""
-                },
-                body: JSON.stringify(profileForm)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setSuccess("Profile updated successfully");
-                setUser(data.data.user);
-            } else {
-                setError(data.message || "Failed to update profile");
-            }
-        } catch {
-            setError("An error occurred while updating profile");
-        } finally {
-            setLoading(false);
-        }
+        profileForm.post(profile.update.url(), FormResponse);
     };
 
-    const handlePasswordSubmit = async (e: React.FormEvent) => {
+    const handlePasswordSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
-
-        try {
-            const response = await fetch("/dashboard/profile/update-password", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ""
-                },
-                body: JSON.stringify({
-                    current_password: passwordForm.current_password,
-                    password: passwordForm.password,
-                    password_confirmation: passwordForm.password_confirmation
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setSuccess("Password updated successfully");
-                setPasswordForm({
-                    current_password: "",
-                    password: "",
-                    password_confirmation: ""
-                });
-            } else {
-                setError(data.message || "Failed to update password");
-            }
-        } catch {
-            setError("An error occurred while updating password");
-        } finally {
-            setLoading(false);
-        }
+        passwordForm.post(profile.updatePassword.url(), FormResponse);
     };
 
     return (
@@ -111,15 +56,17 @@ export default function UserProfile() {
                 <p className="text-gray-600">Manage your account information and password</p>
             </div>
 
-            {error && (
+            {(profileForm.hasErrors || passwordForm.hasErrors) && (
                 <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>{Object.values({ ...profileForm.errors, ...passwordForm.errors })[0]}</AlertDescription>
                 </Alert>
             )}
 
-            {success && (
+            {(profileForm.recentlySuccessful || passwordForm.recentlySuccessful) && (
                 <Alert className="border-green-200 bg-green-50 text-green-800">
-                    <AlertDescription>{success}</AlertDescription>
+                    <AlertDescription>
+                        {profileForm.recentlySuccessful ? 'Profile updated successfully' : 'Password updated successfully'}
+                    </AlertDescription>
                 </Alert>
             )}
 
@@ -129,9 +76,7 @@ export default function UserProfile() {
                         <CardTitle className="flex items-center gap-2">
                             <span>Profile Information</span>
                         </CardTitle>
-                        <CardDescription>
-                            Update your name and email address
-                        </CardDescription>
+                        <CardDescription>Update your name and email address</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleProfileSubmit} className="space-y-4">
@@ -140,33 +85,26 @@ export default function UserProfile() {
                                 <Input
                                     id="name"
                                     type="text"
-                                    value={profileForm.name}
-                                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                                    value={profileForm.data.name}
+                                    onChange={(e) => profileForm.setData('name', e.target.value)}
                                     required
                                 />
+                                {profileForm.errors.name && <p className="text-sm text-red-500">{profileForm.errors.name}</p>}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email</Label>
                                 <Input
                                     id="email"
                                     type="email"
-                                    value={profileForm.email}
-                                    onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                                    value={profileForm.data.email}
+                                    onChange={(e) => profileForm.setData('email', e.target.value)}
                                     required
                                 />
+                                {profileForm.errors.email && <p className="text-sm text-red-500">{profileForm.errors.email}</p>}
                             </div>
-                            <Button type="submit" disabled={loading}>
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="mr-2 h-4 w-4" />
-                                        Save Changes
-                                    </>
-                                )}
+                            <Button type="submit" disabled={profileForm.processing}>
+                                {profileForm.processing ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                                Update Profile
                             </Button>
                         </form>
                     </CardContent>
@@ -175,12 +113,10 @@ export default function UserProfile() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Shield className="h-5 w-5" />
+                            <Shield className="size-4" />
                             Change Password
                         </CardTitle>
-                        <CardDescription>
-                            Update your password to keep your account secure
-                        </CardDescription>
+                        <CardDescription>Update your password to keep your account secure</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -189,70 +125,47 @@ export default function UserProfile() {
                                 <Input
                                     id="current_password"
                                     type="password"
-                                    value={passwordForm.current_password}
-                                    onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                                    value={passwordForm.data.current_password}
+                                    onChange={(e) => passwordForm.setData('current_password', e.target.value)}
                                     required
                                 />
+                                {passwordForm.errors.current_password && (
+                                    <p className="text-sm text-red-500">{passwordForm.errors.current_password}</p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="password">New Password</Label>
                                 <Input
                                     id="password"
                                     type="password"
-                                    value={passwordForm.password}
-                                    onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
+                                    value={passwordForm.data.password}
+                                    onChange={(e) => passwordForm.setData('password', e.target.value)}
                                     required
                                     minLength={8}
                                 />
+                                {passwordForm.errors.password && <p className="text-sm text-red-500">{passwordForm.errors.password}</p>}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">Confirm New Password</Label>
                                 <Input
                                     id="password_confirmation"
                                     type="password"
-                                    value={passwordForm.password_confirmation}
-                                    onChange={(e) => setPasswordForm({ ...passwordForm, password_confirmation: e.target.value })}
+                                    value={passwordForm.data.password_confirmation}
+                                    onChange={(e) => passwordForm.setData('password_confirmation', e.target.value)}
                                     required
                                     minLength={8}
                                 />
-                            </div>
-                            <Button type="submit" disabled={loading}>
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Updating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Shield className="mr-2 h-4 w-4" />
-                                        Update Password
-                                    </>
+                                {passwordForm.errors.password_confirmation && (
+                                    <p className="text-sm text-red-500">{passwordForm.errors.password_confirmation}</p>
                                 )}
+                            </div>
+                            <Button type="submit" disabled={passwordForm.processing}>
+                                {passwordForm.processing ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}
+                                Update Password
                             </Button>
                         </form>
                     </CardContent>
                 </Card>
-
-                {user && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Account Information</CardTitle>
-                            <CardDescription>
-                                Your account details and creation date
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Member since:</span>
-                                <span>{new Date(user.created_at || '').toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Last updated:</span>
-                                <span>{new Date(user.updated_at || '').toLocaleDateString()}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
             </div>
         </div>
     );

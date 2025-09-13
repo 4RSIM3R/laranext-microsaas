@@ -15,7 +15,10 @@ class UserDashboardController extends Controller
 
     public function index()
     {
-        return Inertia::render('user/dashboard');
+        $user = Auth::guard('user')->user();
+        return Inertia::render('user/dashboard', [
+            'user' => $user,
+        ]);
     }
 
     public function onboarding()

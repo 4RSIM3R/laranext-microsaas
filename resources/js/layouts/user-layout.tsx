@@ -29,7 +29,7 @@ import type { SharedData } from '@/types';
 import type { MenuGroup } from '@/types/ui';
 import { useForm, usePage } from '@inertiajs/react';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import { Building2, ChevronsUpDown, Home, LogOut, Settings, User } from 'lucide-react';
+import { Building2, ChevronsUpDown, FileEdit, Home, LogOut, Settings, User } from 'lucide-react';
 import { Toaster } from 'sonner';
 import dashboard from '@/routes/user/dashboard';
 import profile from '@/routes/user/profile';
@@ -47,6 +47,12 @@ const navigations: MenuGroup[] = [
                 id: 'dashboard',
                 title: 'Dashboard',
                 icon: Home,
+                url: dashboard.index.url(),
+            },
+            {
+                id: 'form',
+                title: 'Form',
+                icon: FileEdit,
                 url: dashboard.index.url(),
             },
         ],

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Web\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdatePasswordRequest;
 use App\Utils\WebResponse;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -15,15 +17,8 @@ class UserProfileController extends Controller
     public function index()
     {
         $user = Auth::guard('user')->user();
-
         return Inertia::render('user/profile/index', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'created_at' => $user->created_at,
-                'updated_at' => $user->updated_at,
-            ]
+            'user' => $user,
         ]);
     }
 
@@ -46,47 +41,30 @@ class UserProfileController extends Controller
                 'email' => $request->email,
             ]);
 
-            return WebResponse::success('Profile updated successfully', [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'created_at' => $user->created_at,
-                    'updated_at' => $user->updated_at,
-                ]
-            ]);
-
-        } catch (\Exception $e) {
+            return WebResponse::response($user);
+        } catch (Exception $e) {
             return WebResponse::error($e->getMessage());
         }
     }
 
-    public function updatePassword(Request $request)
+    public function updatePassword(UpdatePasswordRequest $request)
     {
         try {
             $user = Auth::guard('user')->user();
+            $payload = $request->validated();
 
-            $validator = Validator::make($request->all(), [
-                'current_password' => 'required|string',
-                'password' => 'required|string|min:8|confirmed',
-            ]);
 
-            if ($validator->fails()) {
-                return WebResponse::error($validator->errors()->first());
-            }
-
-            if (!Hash::check($request->current_password, $user->password)) {
+            if (!Hash::check($payload['current_password'], $user->password)) {
                 return WebResponse::error('Current password is incorrect');
             }
 
             $user->update([
-                'password' => Hash::make($request->password),
+                'password' => Hash::make($payload['password']),
             ]);
 
-            return WebResponse::success('Password updated successfully');
-
-        } catch (\Exception $e) {
-            return WebResponse::error($e->getMessage());
+            return WebResponse::response($user);
+        } catch (Exception $e) {
+            return back()->withErrors('errors', $e->getMessage());
         }
     }
 }
