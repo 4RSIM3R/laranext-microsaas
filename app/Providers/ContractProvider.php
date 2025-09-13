@@ -12,6 +12,9 @@ use App\Contract\Setting\SystemSettingContract;
 use App\Contract\Auth\UserAuthContract;
 use App\Contract\Auth\AdminAuthContract;
 use App\Contract\Operational\SubcriptionContract;
+use App\Contract\Form\FormContract;
+use App\Contract\Form\PageContract;
+use App\Contract\Form\FieldContract;
 use App\Service\Auth\UserAuthService;
 use App\Service\Auth\AdminAuthService;
 use App\Service\BaseService;
@@ -22,6 +25,9 @@ use App\Service\Master\UserService;
 use App\Service\Operational\SubcriptionService;
 use App\Service\Setting\AppSettingService;
 use App\Service\Setting\SystemSettingService;
+use App\Service\Form\FormService;
+use App\Service\Form\PageService;
+use App\Service\Form\FieldService;
 use Illuminate\Support\ServiceProvider;
 
 class ContractProvider extends ServiceProvider
@@ -42,6 +48,13 @@ class ContractProvider extends ServiceProvider
         $this->app->bind(AdminAuthContract::class, AdminAuthService::class);
 
         $this->app->bind(SubcriptionContract::class, SubcriptionService::class);
+
+        /**
+         * Form Service Contract.
+         */
+        $this->app->bind(FormContract::class, FormService::class);
+        $this->app->bind(PageContract::class, PageService::class);
+        $this->app->bind(FieldContract::class, FieldService::class);
 
         /**
          * Master Service Contract.
