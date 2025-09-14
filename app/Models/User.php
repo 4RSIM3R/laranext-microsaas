@@ -46,14 +46,4 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
-    /**
-     * Get the user's subscriptions.
-     */
-    public function subscriptions()
-    {
-        return $this->hasMany(\Laravel\Cashier\Subscription::class);
-    }
-
-    // Teams feature removed for now
 }

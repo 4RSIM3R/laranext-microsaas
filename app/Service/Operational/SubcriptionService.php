@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Service\Operational;
 
@@ -16,5 +16,4 @@ class SubcriptionService extends BaseService implements SubcriptionContract
     {
         $this->model = $model;
     }
-
 }

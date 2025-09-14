@@ -84,19 +84,4 @@ class StoreFormRequest extends FormRequest
             'is_active.required' => 'Active status is required.',
         ];
     }
-
-    /**
-     * Prepare the data for validation.
-     *
-     * @return void
-     */
-    protected function prepareForValidation(): void
-    {
-        // Ensure slug is lowercase and convert spaces to hyphens
-        if ($this->has('slug')) {
-            $this->merge([
-                'slug' => strtolower(str_replace(' ', '-', $this->input('slug')))
-            ]);
-        }
-    }
 }

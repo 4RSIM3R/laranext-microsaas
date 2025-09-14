@@ -11,11 +11,11 @@ use Laravel\Cashier\Subscription;
 
 class AdminSubcriptionController extends Controller
 {
-    protected SubcriptionContract $subscriptionService;
+    protected SubcriptionContract $service;
 
-    public function __construct(SubcriptionContract $subscriptionService)
+    public function __construct(SubcriptionContract $service)
     {
-        $this->subscriptionService = $subscriptionService;
+        $this->service = $service;
     }
 
     public function index()
@@ -25,34 +25,23 @@ class AdminSubcriptionController extends Controller
 
     public function fetch(Request $request)
     {
-        try {
-            $subscriptions = Subscription::with(['user:id,name,email', 'items'])
-                ->when($request->search, function ($query, $search) {
-                    $query->whereHas('user', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    })->orWhere('stripe_id', 'like', "%{$search}%");
-                })
-                ->when($request->status, function ($query, $status) {
-                    $query->where('stripe_status', $status);
-                })
-                ->when($request->type, function ($query, $type) {
-                    $query->where('type', $type);
-                })
-                ->orderBy('created_at', 'desc')
-                ->paginate($request->per_page ?? 15);
+        $data = $this->service->all(
+            filters: [],
+            sorts: [],
+            paginate: true,
+            relation: ['user:id,name,email', 'items'],
+            per_page: $request->per_page ?? 15,
+            order_column: 'created_at',
+            order_position: 'desc'
+        );
 
-            return WebResponse::success('Subscriptions retrieved successfully', $subscriptions);
-        } catch (\Exception $e) {
-            return WebResponse::error('Failed to fetch subscriptions: ' . $e->getMessage());
-        }
+        return response()->json($data);
     }
 
     public function show($id)
     {
         try {
-            $subscription = Subscription::with(['user:id,name,email', 'items'])
-                ->findOrFail($id);
+            $subscription = $this->service->find($id, ['user:id,name,email', 'items']);
 
             return Inertia::render('admin/subcription/show', [
                 'subscription' => $subscription,

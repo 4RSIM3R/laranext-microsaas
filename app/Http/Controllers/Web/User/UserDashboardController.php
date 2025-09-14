@@ -7,7 +7,9 @@ use App\Http\Requests\SubscriptionRequest;
 use App\Models\Plan;
 use App\Utils\WebResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class UserDashboardController extends Controller
@@ -85,47 +87,76 @@ class UserDashboardController extends Controller
         $sessionId = $request->get('session_id');
 
         if (!$sessionId) {
-            return redirect()->route('user.dashboard.onboarding');
+            return redirect()->route('user.dashboard.onboarding')
+                ->with('error', 'Invalid checkout session.');
         }
 
         $user = Auth::guard('user')->user();
 
-        // Verify the checkout session and create subscription record
         try {
-            $session = $user->stripe()->checkout->sessions->retrieve($sessionId);
+            // Retrieve the checkout session from Stripe
+            $session = $user->stripe()->checkout->sessions->retrieve($sessionId, [
+                'expand' => ['subscription', 'subscription.items.data.price']
+            ]);
 
-            if ($session->payment_status === 'paid') {
-                // Create subscription record in database for admin panel
-                $subscription = $user->subscriptions()->create([
-                    'name' => 'default',
-                    'stripe_id' => $session->subscription,
-                    'stripe_status' => 'active',
-                    'stripe_price' => $session->amount_total / 100, // Convert from cents
-                    'quantity' => 1,
-                    'trial_ends_at' => $session->trial_end ? \Carbon\Carbon::createFromTimestamp($session->trial_end) : null,
-                    'ends_at' => null,
-                ]);
-
-                // Add subscription item
-                $subscription->items()->create([
-                    'stripe_id' => $session->subscription,
-                    'stripe_product' => $session->metadata->plan_id ?? null,
-                    'stripe_price' => $session->amount_total / 100,
-                    'quantity' => 1,
-                ]);
+            // Verify the session is valid
+            if (!$session || !$session->subscription) {
+                return redirect()->route('user.dashboard.onboarding')
+                    ->with('error', 'Invalid checkout session.');
             }
-        } catch (\Exception $e) {
-            // Log error but don't fail the success page
-            \Log::error('Failed to create subscription record: ' . $e->getMessage());
-        }
 
-        // Redirect to dashboard with success message
-        return redirect()->route('user.dashboard.index')->with('success', 'Welcome! Your subscription has been activated successfully.');
+            // Get the plan from metadata
+            $planId = $session->metadata->plan_id ?? null;
+            $plan = $planId ? Plan::find($planId) : null;
+
+            // Handle successful payment
+            if ($session->payment_status === 'paid' || $session->status === 'complete') {
+
+                // Check if subscription already exists (to prevent duplicates)
+                $subscription = $user->subscription('default');
+
+                if ($subscription) {
+                    $subscription->update([
+                        'stripe_id' => $session->subscription->id,
+                        'stripe_status' => $session->subscription->status,
+                        'stripe_price' => $session->subscription->items->data[0]->price->id,
+                        'quantity' => $session->subscription->items->data[0]->quantity,
+                        'trial_ends_at' => $session->subscription->trial_end ?
+                            Carbon::createFromTimestamp($session->subscription->trial_end) : null,
+                        'ends_at' => null,
+                    ]);
+                } else {
+                    $user->newSubscription('default', $plan->stripe_price_id)->create($session->subscription->id);
+                }
+
+                return redirect()->route('user.dashboard.index')
+                    ->with('success', 'Welcome! Your subscription has been activated successfully.');
+            }
+
+            // Handle incomplete or failed payments
+            if ($session->payment_status === 'unpaid' || $session->status === 'open') {
+                return redirect()->route('user.dashboard.onboarding')
+                    ->with('error', 'Payment was not completed. Please try again.');
+            }
+
+            return redirect()->route('user.dashboard.onboarding')
+                ->with('error', 'There was an issue processing your subscription. Please contact support.');
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error('Checkout session processing failed', [
+                'session_id' => $sessionId,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('user.dashboard.onboarding')
+                ->with('error', 'There was an error processing your subscription. Please try again or contact support.');
+        }
     }
 
     public function subscribe()
     {
-        // Keep this method for backward compatibility or remove if not needed
         return redirect()->route('user.dashboard.onboarding');
     }
 }

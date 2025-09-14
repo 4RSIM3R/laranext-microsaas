@@ -38,7 +38,7 @@ class AdminDashboardController extends Controller
     private function calculateMRR(Carbon $month): float
     {
         // Get all active subscriptions for the current month
-        $activeSubscriptions = Subscription::where('stripe_status', 'active')
+        $activeSubscriptions = Subscription::query()->where('stripe_status', 'active')
             ->whereDate('created_at', '<=', $month->endOfMonth())
             ->where(function ($query) use ($month) {
                 $query->whereNull('ends_at')
