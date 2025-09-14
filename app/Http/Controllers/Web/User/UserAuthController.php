@@ -33,6 +33,18 @@ class UserAuthController extends Controller
     {
         $payload = $request->validated();
         $result = $this->service->login($payload);
+
+        if ($result instanceof \Exception) {
+            return WebResponse::response($result, "user.auth.login");
+        }
+
+        $user = Auth::guard('user')->user();
+
+        // Check if user has an active subscription
+        if ($user && $user->subscribed('default')) {
+            return WebResponse::response($result, "user.dashboard.index");
+        }
+
         return WebResponse::response($result, "user.dashboard.onboarding");
     }
 
@@ -75,6 +87,7 @@ class UserAuthController extends Controller
     public function send_email(ForgotPasswordRequest $request)
     {
         $payload = $request->validated();
+        // TODO: Implement forgot password email sending
     }
 
     public function change()
@@ -85,6 +98,7 @@ class UserAuthController extends Controller
     public function reset(ChangePasswordRequest $request)
     {
         $payload = $request->validated();
+        // TODO: Implement password reset
     }
 
     /**

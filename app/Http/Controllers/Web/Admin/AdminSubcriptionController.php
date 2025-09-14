@@ -80,7 +80,9 @@ class AdminSubcriptionController extends Controller
                     ->with('items')
                     ->get()
                     ->sum(function ($subscription) {
-                        return $subscription->items->sum('quantity') ?? 0;
+                        return $subscription->items->sum(function ($item) {
+                            return $item->stripe_price * $item->quantity;
+                        });
                     }),
             ];
 

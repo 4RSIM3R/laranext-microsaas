@@ -88,10 +88,39 @@ class UserDashboardController extends Controller
             return redirect()->route('user.dashboard.onboarding');
         }
 
-        // Verify the checkout session and handle success
-        return Inertia::render('user/onboarding-success', [
-            'sessionId' => $sessionId
-        ]);
+        $user = Auth::guard('user')->user();
+
+        // Verify the checkout session and create subscription record
+        try {
+            $session = $user->stripe()->checkout->sessions->retrieve($sessionId);
+
+            if ($session->payment_status === 'paid') {
+                // Create subscription record in database for admin panel
+                $subscription = $user->subscriptions()->create([
+                    'name' => 'default',
+                    'stripe_id' => $session->subscription,
+                    'stripe_status' => 'active',
+                    'stripe_price' => $session->amount_total / 100, // Convert from cents
+                    'quantity' => 1,
+                    'trial_ends_at' => $session->trial_end ? \Carbon\Carbon::createFromTimestamp($session->trial_end) : null,
+                    'ends_at' => null,
+                ]);
+
+                // Add subscription item
+                $subscription->items()->create([
+                    'stripe_id' => $session->subscription,
+                    'stripe_product' => $session->metadata->plan_id ?? null,
+                    'stripe_price' => $session->amount_total / 100,
+                    'quantity' => 1,
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the success page
+            \Log::error('Failed to create subscription record: ' . $e->getMessage());
+        }
+
+        // Redirect to dashboard with success message
+        return redirect()->route('user.dashboard.index')->with('success', 'Welcome! Your subscription has been activated successfully.');
     }
 
     public function subscribe()
