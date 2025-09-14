@@ -1,3 +1,5 @@
+import UserLayout from "@/layouts/user-layout";
+
 export default function UserSubcription() {
     return (
         <div>
@@ -5,3 +7,5 @@ export default function UserSubcription() {
         </div>
     )
 }
+
+UserSubcription.layout = (page: React.ReactNode) => <UserLayout>{page}</UserLayout>;

@@ -20,7 +20,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-
             $table->index('slug');
             $table->index('user_id');
             $table->index('is_active');

@@ -22,7 +22,10 @@ class PageFactory extends Factory
             'title' => $this->faker->words(2, true),
             'description' => $this->faker->sentence(),
             'sort_order' => $this->faker->numberBetween(1, 10),
-            'conditions' => [],
+            'conditional_logic' => [
+                'rules' => [],
+                'default_next_page_offset' => 1
+            ],
             'settings' => [
                 'progress_bar' => true,
                 'auto_advance' => false,
@@ -34,19 +37,22 @@ class PageFactory extends Factory
     public function withConditionalLogic()
     {
         return $this->state(fn (array $attributes) => [
-            'conditions' => [
-                [
-                    'field' => 'email',
-                    'operator' => 'contains',
-                    'value' => '@gmail.com',
-                    'next_page_id' => 2
+            'conditional_logic' => [
+                'rules' => [
+                    [
+                        'field' => 'email',
+                        'operator' => 'contains',
+                        'value' => '@gmail.com',
+                        'next_page_offset' => 1
+                    ],
+                    [
+                        'field' => 'budget',
+                        'operator' => 'greater_than',
+                        'value' => 1000,
+                        'next_page_offset' => 2
+                    ]
                 ],
-                [
-                    'field' => 'budget',
-                    'operator' => 'greater_than',
-                    'value' => 1000,
-                    'next_page_id' => 3
-                ]
+                'default_next_page_offset' => null
             ]
         ]);
     }

@@ -32,12 +32,15 @@ export interface FormPage {
     title: string;
     description?: string;
     sort_order: number;
-    conditions?: Array<{
-        field: string;
-        operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in';
-        value: string | number;
-        next_page_id?: number;
-    }>;
+    conditional_logic?: {
+        rules?: Array<{
+            field: string;
+            operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in';
+            value: string | number;
+            next_page_offset?: number;
+        }>;
+        default_next_page_offset?: number | null;
+    };
     settings?: {
         progress_bar?: boolean;
         auto_advance?: boolean;

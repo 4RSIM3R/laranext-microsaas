@@ -38,8 +38,7 @@ interface ConditionalRule {
 
 interface ConditionalLogic {
     rules?: ConditionalRule[];
-    next_page_id?: number | null;
-    default_next_page_id?: number | null;
+    default_next_page_offset?: number | null;
 }
 
 interface FormPage {
@@ -178,16 +177,14 @@ export default function FormViewer({ form, isPreview = false }: FormViewerProps)
             }
         }
 
-        // Check for simple next_page_id
-        if (currentPage.conditional_logic?.next_page_id !== undefined && currentPage.conditional_logic?.next_page_id !== null) {
-            const targetPageIndex = form.pages?.findIndex((page) => page.id === currentPage.conditional_logic?.next_page_id);
-            return targetPageIndex !== -1 ? targetPageIndex! : null;
-        }
-
-        // Check for default_next_page_id
-        if (currentPage.conditional_logic?.default_next_page_id !== undefined && currentPage.conditional_logic?.default_next_page_id !== null) {
-            const targetPageIndex = form.pages?.findIndex((page) => page.id === currentPage.conditional_logic?.default_next_page_id);
-            return targetPageIndex !== -1 ? targetPageIndex! : null;
+        // Check for default_next_page_offset
+        if (currentPage.conditional_logic?.default_next_page_offset !== undefined && currentPage.conditional_logic?.default_next_page_offset !== null) {
+            const targetIndex = currentPageIndex + currentPage.conditional_logic.default_next_page_offset;
+            if (targetIndex >= 0 && targetIndex < (form.pages?.length || 0)) {
+                return targetIndex;
+            }
+            // If offset leads to invalid index, end the form
+            return null;
         }
 
         // Default to linear progression

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pages', function (Blueprint $table) {
-            $table->json('conditional_logic')->nullable()->after('conditions');
+            $table->json('conditional_logic')->nullable()->change();
         });
     }
 

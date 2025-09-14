@@ -64,7 +64,14 @@ class FormService extends BaseService implements FormContract
 
     public function updateWithPages(int $id, array $data, array $pages = [])
     {
-        $form = $this->update($id, $data);
+        $form = $this->find($id);
+
+        if (!$form) {
+            throw new Exception('Form not found');
+        }
+
+        // Update form data
+        $form->update($data);
 
         if (!empty($pages)) {
             // Delete existing pages and their fields

@@ -49,7 +49,10 @@ class FormSeeder extends Seeder
             'title' => 'Basic Information',
             'description' => 'Let\'s start with some basic details',
             'sort_order' => 1,
-            'conditions' => [],
+            'conditional_logic' => [
+                'rules' => [],
+                'default_next_page_offset' => 1 // Go to next page
+            ],
             'settings' => [
                 'progress_bar' => true,
                 'auto_advance' => false,
@@ -86,7 +89,10 @@ class FormSeeder extends Seeder
             'title' => 'Company Information',
             'description' => 'Tell us about your company',
             'sort_order' => 2,
-            'conditions' => [],
+            'conditional_logic' => [
+                'rules' => [],
+                'default_next_page_offset' => 1 // Go to next page
+            ],
             'settings' => [
                 'progress_bar' => true,
                 'auto_advance' => false,
@@ -128,13 +134,16 @@ class FormSeeder extends Seeder
             'title' => 'Budget & Timeline',
             'description' => 'Help us understand your needs better',
             'sort_order' => 3,
-            'conditions' => [
-                [
-                    'field' => 'company_size',
-                    'operator' => 'not_equals',
-                    'value' => '1-10',
-                    'next_page_id' => 4
-                ]
+            'conditional_logic' => [
+                'rules' => [
+                    [
+                        'field' => 'company_size',
+                        'operator' => 'not_equals',
+                        'value' => '1-10',
+                        'next_page_offset' => 1 // Go to next page (page 4)
+                    ]
+                ],
+                'default_next_page_offset' => null // End of form if company_size is '1-10'
             ],
             'settings' => [
                 'progress_bar' => true,
@@ -183,7 +192,10 @@ class FormSeeder extends Seeder
             'title' => 'Additional Requirements',
             'description' => 'Tell us more about your project',
             'sort_order' => 4,
-            'conditions' => [],
+            'conditional_logic' => [
+                'rules' => [],
+                'default_next_page_offset' => null // Final page
+            ],
             'settings' => [
                 'progress_bar' => true,
                 'auto_advance' => false,
@@ -249,6 +261,10 @@ class FormSeeder extends Seeder
             'title' => 'Contact Us',
             'description' => 'Get in touch with us',
             'sort_order' => 1,
+            'conditional_logic' => [
+                'rules' => [],
+                'default_next_page_offset' => null // Single page form
+            ],
             'settings' => [
                 'progress_bar' => false,
                 'auto_advance' => false,
@@ -321,23 +337,22 @@ class FormSeeder extends Seeder
             'title' => 'What\'s Your Age?',
             'description' => 'Please select your age group to continue',
             'sort_order' => 1,
-            'conditions' => [],
             'conditional_logic' => [
                 'rules' => [
                     [
                         'field' => 'age_group',
                         'operator' => 'equals',
                         'value' => 'under_17',
-                        'next_page_offset' => 1 // Go to next page (index + 1)
+                        'next_page_offset' => 1 // Go to page 2
                     ],
                     [
                         'field' => 'age_group',
                         'operator' => 'equals',
                         'value' => '17_or_older',
-                        'next_page_offset' => 2 // Go to page after next (index + 2)
+                        'next_page_offset' => 2 // Go to page 3
                     ]
                 ],
-                'default_next_page_id' => null // Must make a selection
+                'default_next_page_offset' => null // Must make a selection
             ],
             'settings' => [
                 'progress_bar' => true,
@@ -353,6 +368,7 @@ class FormSeeder extends Seeder
             'type' => 'radio',
             'required' => true,
             'sort_order' => 1,
+            
             'options' => [
                 ['value' => 'under_17', 'label' => 'Under 17 years old'],
                 ['value' => '17_or_older', 'label' => '17 years or older']
@@ -378,7 +394,6 @@ class FormSeeder extends Seeder
             'title' => 'Parental Consent Required',
             'description' => 'We need parental consent for users under 17',
             'sort_order' => 2,
-            'conditions' => [],
             'conditional_logic' => [
                 'rules' => [
                     [
@@ -387,8 +402,7 @@ class FormSeeder extends Seeder
                         'value' => 'under_17'
                     ]
                 ],
-                'next_page_id' => null, // This is the final page for this path
-                'default_next_page_id' => null // No default, only show if condition matches
+                'default_next_page_offset' => null // This is the final page for this path
             ],
             'settings' => [
                 'progress_bar' => true,
@@ -443,7 +457,6 @@ class FormSeeder extends Seeder
             'title' => 'Contact Information',
             'description' => 'Please provide your contact details',
             'sort_order' => 3,
-            'conditions' => [],
             'conditional_logic' => [
                 'rules' => [
                     [
@@ -452,8 +465,7 @@ class FormSeeder extends Seeder
                         'value' => '17_or_older'
                     ]
                 ],
-                'next_page_id' => null, // This is the final page for this path
-                'default_next_page_id' => null // No default, only show if condition matches
+                'default_next_page_offset' => null // This is the final page for this path
             ],
             'settings' => [
                 'progress_bar' => true,
@@ -548,11 +560,9 @@ class FormSeeder extends Seeder
             'title' => 'Basic Information',
             'description' => 'Tell us about yourself',
             'sort_order' => 1,
-            'conditions' => [],
             'conditional_logic' => [
                 'rules' => [], // No conditional rules
-                'next_page_id' => 2, // Always go to page 2
-                'default_next_page_id' => 2 // Default next page
+                'default_next_page_offset' => 1 // Always go to next page (page 2)
             ],
             'settings' => [
                 'progress_bar' => true,
@@ -578,11 +588,9 @@ class FormSeeder extends Seeder
             'title' => 'Additional Details',
             'description' => 'A few more details',
             'sort_order' => 2,
-            'conditions' => [],
             'conditional_logic' => [
                 'rules' => [], // No conditional rules
-                'next_page_id' => null, // This is the final page
-                'default_next_page_id' => null
+                'default_next_page_offset' => null // This is the final page
             ],
             'settings' => [
                 'progress_bar' => true,

@@ -123,7 +123,7 @@ export default function SubcriptionShow() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {subscription.items.map((item, index) => (
+                            {subscription.items.map((item) => (
                                 <div key={item.id} className="rounded-lg border p-4">
                                     <div className="grid gap-2 md:grid-cols-2">
                                         <div className="space-y-2">
