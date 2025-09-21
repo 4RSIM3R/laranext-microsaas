@@ -27,6 +27,9 @@ class FormViewerController extends Controller
             abort(404);
         }
 
+        // Increment view count
+        $form->incrementViewCount();
+
         return Inertia::render('public/FormViewer', [
             'form' => $form
         ]);
@@ -43,6 +46,26 @@ class FormViewerController extends Controller
         return Inertia::render('public/FormViewer', [
             'form' => $form,
             'isPreview' => true
+        ]);
+    }
+
+    public function embed($embedCode)
+    {
+        $form = $this->formService->findByEmbedCode($embedCode);
+
+        if (!$form) {
+            abort(404);
+        }
+
+        if (!$form->is_active) {
+            abort(404);
+        }
+
+        // Increment view count
+        $form->incrementViewCount();
+
+        return Inertia::render('public/FormEmbed', [
+            'form' => $form
         ]);
     }
 }

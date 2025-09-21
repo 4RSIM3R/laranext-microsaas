@@ -1,6 +1,7 @@
 import NextTable from '@/components/next-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import EmbedModal from '@/components/user/form/embed-modal';
 import UserLayout from '@/layouts/user-layout';
 import { date_format } from '@/lib/format';
 import forms from '@/routes/forms';
@@ -10,10 +11,35 @@ import { Form } from '@/types/form';
 import { Link } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
-import { Eye, Plus } from 'lucide-react';
-import { useCallback } from 'react';
+import { BarChart3, Code, Eye, Plus } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 export default function UserFormIndex() {
+    const [embedModal, setEmbedModal] = useState<{
+        isOpen: boolean;
+        embedUrl: string;
+        embedCode: string;
+    }>({
+        isOpen: false,
+        embedUrl: '',
+        embedCode: '',
+    });
+
+    const handleGenerateEmbed = async (formId: number) => {
+        try {
+            const response = await axios.post(form.generateEmbed(formId).url);
+            const { embed_url, embed_code } = response.data;
+
+            setEmbedModal({
+                isOpen: true,
+                embedUrl: embed_url,
+                embedCode: embed_code,
+            });
+        } catch (error) {
+            console.error('Failed to generate embed code:', error);
+        }
+    };
+
     const load = useCallback(async (params: Record<string, any>) => {
         const response = await axios.get<Base<Form[]>>(form.fetch().url, {
             params: params,
@@ -75,11 +101,19 @@ export default function UserFormIndex() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="center">
+                        <Link href={form.detail(row.row.original.id).url}>
+                            <DropdownMenuItem>
+                                <BarChart3 /> Analytics
+                            </DropdownMenuItem>
+                        </Link>
                         <Link href={form.builder(row.row.original.id).url}>
                             <DropdownMenuItem>
                                 <Eye /> Builder
                             </DropdownMenuItem>
                         </Link>
+                        <DropdownMenuItem onClick={() => handleGenerateEmbed(row.row.original.id)}>
+                            <Code /> Embed
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             ),
@@ -103,6 +137,13 @@ export default function UserFormIndex() {
                 </div>
             </div>
             <NextTable<Form> enableSelect={false} load={load} id={'id'} columns={columns} mode="table" />
+
+            <EmbedModal
+                isOpen={embedModal.isOpen}
+                onClose={() => setEmbedModal((prev) => ({ ...prev, isOpen: false }))}
+                embedUrl={embedModal.embedUrl}
+                embedCode={embedModal.embedCode}
+            />
         </div>
     );
 }

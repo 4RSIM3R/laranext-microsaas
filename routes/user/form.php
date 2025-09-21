@@ -9,7 +9,10 @@ Route::group(['middleware' => 'auth:user', 'prefix' => 'dashboard/form', 'as' =>
     Route::get('create', [UserFormController::class, 'create'])->name('create');
     Route::post('store', [UserFormController::class, 'store'])->name('store');
     Route::get('{id}', [UserFormController::class, 'show'])->name('show');
+    Route::get('{id}/detail', [UserFormController::class, 'detail'])->name('detail');
+    Route::get('{id}/submissions', [UserFormController::class, 'submissions'])->name('submissions');
     Route::get('{id}/builder', [UserFormController::class, 'builder'])->name('builder');
+    Route::post('{id}/generate-embed', [UserFormController::class, 'generateEmbed'])->name('generate-embed');
     Route::put('{id}', [UserFormController::class, 'update'])->name('update');
     Route::delete('{id}', [UserFormController::class, 'destroy'])->name('destroy');
 });

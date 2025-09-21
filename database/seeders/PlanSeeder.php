@@ -20,7 +20,6 @@ class PlanSeeder extends Seeder
             'description' => 'Everything you need to create high-converting funnel forms',
             'is_active' => true,
             'price' => 10.00,
-            'signup_fee' => 0.00,
             'trial_period' => 7,
             'trial_interval' => 'day',
             'invoice_period' => 1,
@@ -30,10 +29,9 @@ class PlanSeeder extends Seeder
             'prorate_day' => 1,
             'prorate_period' => 1,
             'prorate_extend_due' => 1,
-            'active_subscribers_limit' => null,
             'sort_order' => 1,
             'stripe_price_id' => 'price_1S6DeSRrYVQ7dJWV7E6UhQqn',
-            'currency' => 'USD'
+            'currency' => 'usd'
         ]);
 
         // Add features for the funnel builder plan

@@ -55,13 +55,6 @@ const intervalOptions = [
     { value: 'year', label: 'Year' },
 ];
 
-const currencyOptions = [
-    { value: 'USD', label: 'USD' },
-    { value: 'EUR', label: 'EUR' },
-    { value: 'GBP', label: 'GBP' },
-    { value: 'IDR', label: 'IDR' },
-];
-
 export default function PlanForm({ plan }: Props) {
     const { data, setData, post, put, errors, processing } = useForm<FormData>({
         name: plan?.name || '',
@@ -191,11 +184,7 @@ export default function PlanForm({ plan }: Props) {
                             />
                             <InputError message={errors?.description} />
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <Checkbox id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked === true)} />
-                            <Label htmlFor="is_active">Active</Label>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
+                        <div className="col-span-full flex flex-col gap-1.5">
                             <Label htmlFor="sort_order">Sort Order</Label>
                             <Input
                                 id="sort_order"
@@ -205,6 +194,10 @@ export default function PlanForm({ plan }: Props) {
                                 onChange={(e) => setData('sort_order', parseInt(e.target.value) || 0)}
                             />
                             <InputError message={errors?.sort_order} />
+                        </div>
+                        <div className="col-span-full flex items-center space-x-2">
+                            <Checkbox id="is_active" checked={data.is_active} onCheckedChange={(checked) => setData('is_active', checked === true)} />
+                            <Label htmlFor="is_active">Active</Label>
                         </div>
                     </CardContent>
                 </Card>
@@ -227,55 +220,6 @@ export default function PlanForm({ plan }: Props) {
                             />
                             <InputError message={errors?.price} />
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="currency">Currency *</Label>
-                            <Select value={data.currency} onValueChange={(value) => setData('currency', value)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select currency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {currencyOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors?.currency} />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="signup_fee">Signup Fee</Label>
-                            <Input
-                                id="signup_fee"
-                                type="text"
-                                inputMode="decimal"
-                                value={data.signup_fee}
-                                onChange={(e) => setData('signup_fee', e.target.value)}
-                                placeholder="0.00"
-                            />
-                            <InputError message={errors?.signup_fee} />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="active_subscribers_limit">Subscriber Limit</Label>
-                            <Input
-                                id="active_subscribers_limit"
-                                type="number"
-                                inputMode="numeric"
-                                value={data.active_subscribers_limit || ''}
-                                onChange={(e) => setData('active_subscribers_limit', e.target.value ? parseInt(e.target.value) : null)}
-                                placeholder="Unlimited"
-                            />
-                            <InputError message={errors?.active_subscribers_limit} />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg font-semibold">Billing Cycle</CardTitle>
-                        <CardDescription>Configure billing and invoice settings.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="flex flex-col gap-1.5">
                             <Label htmlFor="invoice_period">Invoice Period *</Label>
                             <Input
@@ -303,15 +247,6 @@ export default function PlanForm({ plan }: Props) {
                             </Select>
                             <InputError message={errors?.invoice_interval} />
                         </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg font-semibold">Stripe Integration</CardTitle>
-                        <CardDescription>Connect this plan to Stripe for payment processing.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
                         <div className="flex flex-col gap-1.5">
                             <Label htmlFor="stripe_price_id">Stripe Price ID</Label>
                             <Input
@@ -325,7 +260,6 @@ export default function PlanForm({ plan }: Props) {
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg font-semibold">Trial & Grace Period</CardTitle>
@@ -425,10 +359,8 @@ export default function PlanForm({ plan }: Props) {
                                                     value={feature.name}
                                                     onChange={(e) => {
                                                         updateFeature(index, 'name', e.target.value);
-                                                        // Only auto-generate slug for new features (empty slug)
-                                                        if (!feature.slug) {
-                                                            updateFeature(index, 'slug', generateSlug(e.target.value));
-                                                        }
+                                                        // Auto-generate slug when name changes
+                                                        updateFeature(index, 'slug', generateSlug(e.target.value));
                                                     }}
                                                     placeholder="API Access"
                                                 />
@@ -438,8 +370,8 @@ export default function PlanForm({ plan }: Props) {
                                                 <Label>Slug *</Label>
                                                 <Input
                                                     value={feature.slug}
-                                                    onChange={(e) => updateFeature(index, 'slug', e.target.value)}
                                                     placeholder="api-access"
+                                                    readOnly
                                                 />
                                                 <InputError message={errors?.[`features.${index}.slug`]} />
                                             </div>

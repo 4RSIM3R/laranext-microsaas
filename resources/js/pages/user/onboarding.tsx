@@ -1,25 +1,32 @@
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import dashboard from '@/routes/user/dashboard';
 import { Plan } from '@/types/plan';
-import axios from 'axios';
 import { loadStripe } from '@stripe/stripe-js';
-import { CheckCircle, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { AlertTriangle, CheckCircle, Loader2, Mail, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 type Props = {
     plans: Plan[];
     stripeKey: string;
     stripePublishableKey: string;
+    flash?: {
+        error?: string;
+        error_code?: string;
+        retry_plan_id?: string;
+    };
 };
 
-export default function UserOnboarding({ plans, stripePublishableKey }: Props) {
+export default function UserOnboarding({ plans, stripePublishableKey, flash }: Props) {
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-    const [step, setStep] = useState<'select' | 'payment' | 'success'>('select');
+    const [step, setStep] = useState<'select' | 'payment'>('select');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [errorCode, setErrorCode] = useState<string | null>(null);
+    const [retryPlanId, setRetryPlanId] = useState<number | null>(null);
     const [stripe, setStripe] = useState<any>(null);
 
     useEffect(() => {
@@ -27,12 +34,35 @@ export default function UserOnboarding({ plans, stripePublishableKey }: Props) {
         if (stripePublishableKey) {
             loadStripe(stripePublishableKey).then(setStripe);
         }
-    }, [stripePublishableKey]);
+
+        // Check for error messages from flash data or URL parameters
+        if (flash?.error) {
+            setError(flash.error);
+            setErrorCode(flash.error_code || null);
+            setRetryPlanId(flash.retry_plan_id ? parseInt(flash.retry_plan_id) : null);
+        } else {
+            // Fallback to URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorParam = urlParams.get('error');
+            const errorCodeParam = urlParams.get('error_code');
+            const retryPlanIdParam = urlParams.get('retry_plan_id');
+
+            if (errorParam) {
+                setError(errorParam);
+                setErrorCode(errorCodeParam);
+                setRetryPlanId(retryPlanIdParam ? parseInt(retryPlanIdParam) : null);
+
+                // Clean URL
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }
+    }, [stripePublishableKey, flash]);
 
     const handlePlanSelect = async (plan: Plan) => {
         setSelectedPlan(plan);
         setLoading(true);
         setError(null);
+        setErrorCode(null);
         setStep('payment');
 
         try {
@@ -48,19 +78,79 @@ export default function UserOnboarding({ plans, stripePublishableKey }: Props) {
                 });
 
                 if (result.error) {
-                    setError(result.error.message);
+                    setError(result.error.message || 'Payment failed. Please try again.');
+                    setErrorCode('STRIPE_REDIRECT_ERROR');
                     setStep('select');
                 }
             } else {
-                setError('Failed to create checkout session');
+                setError('Failed to create checkout session. Please try again.');
+                setErrorCode('SESSION_CREATION_FAILED');
                 setStep('select');
             }
         } catch (err: any) {
-            setError(err.response?.data?.error || 'An error occurred');
+            const errorMessage = err.response?.data?.error || 'An unexpected error occurred. Please try again.';
+            const errorCode = err.response?.data?.error_code || 'UNKNOWN_ERROR';
+
+            setError(errorMessage);
+            setErrorCode(errorCode);
             setStep('select');
         } finally {
             setLoading(false);
         }
+    };
+
+    const clearError = () => {
+        setError(null);
+        setErrorCode(null);
+        setRetryPlanId(null);
+    };
+
+    type ErrorAction = {
+        label: string;
+        action: () => void | Promise<void>;
+        icon: React.ComponentType<any>;
+        variant: 'default' | 'outline';
+    };
+
+    const getErrorActions = (): ErrorAction[] => {
+        const actions: ErrorAction[] = [];
+
+        // Retry with same plan if available
+        if (retryPlanId) {
+            const retryPlan = plans.find((p) => p.id === retryPlanId);
+            if (retryPlan) {
+                actions.push({
+                    label: `Retry ${retryPlan.name}`,
+                    action: () => handlePlanSelect(retryPlan),
+                    icon: RefreshCw,
+                    variant: 'default',
+                });
+            }
+        }
+
+        // Contact support for certain errors
+        if (['PLAN_CONFIG_ERROR', 'AUTH_ERROR', 'SUBSCRIPTION_CREATION_FAILED'].includes(errorCode || '')) {
+            actions.push({
+                label: 'Contact Support',
+                action: () => {
+                    window.open('mailto:support@example.com', '_blank');
+                },
+                icon: Mail,
+                variant: 'outline',
+            });
+        }
+
+        // Refresh page for configuration errors
+        if (['PLAN_NOT_FOUND', 'CONNECTION_ERROR'].includes(errorCode || '')) {
+            actions.push({
+                label: 'Refresh Page',
+                action: () => window.location.reload(),
+                icon: RefreshCw,
+                variant: 'outline',
+            });
+        }
+
+        return actions;
     };
 
     const formatPrice = (price: number) => {
@@ -69,29 +159,6 @@ export default function UserOnboarding({ plans, stripePublishableKey }: Props) {
             currency: 'USD',
         }).format(price);
     };
-
-    if (step === 'success') {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-background">
-                <Card className="w-full max-w-md">
-                    <CardContent className="pt-6">
-                        <div className="flex flex-col items-center space-y-4 text-center">
-                            <CheckCircle className="h-12 w-12 text-green-500" />
-                            <div>
-                                <h2 className="text-xl font-semibold">Welcome aboard!</h2>
-                                <p className="text-muted-foreground">
-                                    {selectedPlan?.trial_period && selectedPlan.trial_period > 0
-                                        ? `Your ${selectedPlan.trial_period} ${selectedPlan.trial_interval} free trial for ${selectedPlan.name} has started!`
-                                        : `Your subscription to ${selectedPlan?.name} has been activated.`}
-                                </p>
-                            </div>
-                            <Button onClick={() => (window.location.href = dashboard.index.url())}>Go to Dashboard</Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
 
     if (step === 'payment' && selectedPlan) {
         return (
@@ -131,8 +198,31 @@ export default function UserOnboarding({ plans, stripePublishableKey }: Props) {
                 </div>
 
                 {error && (
-                    <div className="mb-8 text-center">
-                        <p className="text-sm text-destructive">{error}</p>
+                    <div className="mb-8">
+                        <Alert className="border-destructive bg-destructive/10">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertDescription className="flex flex-col space-y-3">
+                                <div>
+                                    <p className="font-medium text-destructive">{error}</p>
+                                    {errorCode && <p className="mt-1 text-xs text-muted-foreground">Error Code: {errorCode}</p>}
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                    {getErrorActions().map((action, index) => {
+                                        const Icon = action.icon;
+                                        return (
+                                            <Button key={index} variant={action.variant} size="sm" onClick={action.action} className="h-8">
+                                                <Icon className="mr-1 h-3 w-3" />
+                                                {action.label}
+                                            </Button>
+                                        );
+                                    })}
+                                    <Button variant="ghost" size="sm" onClick={clearError} className="h-8">
+                                        Dismiss
+                                    </Button>
+                                </div>
+                            </AlertDescription>
+                        </Alert>
                     </div>
                 )}
 
@@ -140,12 +230,22 @@ export default function UserOnboarding({ plans, stripePublishableKey }: Props) {
                     {plans.map((plan) => (
                         <Card
                             key={plan.id}
-                            className={cn('relative cursor-pointer transition-all hover:shadow-lg', plan.sort_order === 1 && 'ring-2 ring-primary')}
+                            className={cn(
+                                'relative cursor-pointer transition-all hover:shadow-lg',
+                                plan.sort_order === 1 && 'ring-2 ring-primary',
+                                retryPlanId === plan.id && 'bg-orange-50/50 ring-2 ring-orange-500',
+                            )}
                             onClick={() => !loading && handlePlanSelect(plan)}
                         >
-                            {plan.sort_order === 1 && (
+                            {plan.sort_order === 1 && !retryPlanId && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform">
                                     <Badge className="bg-primary text-primary-foreground">Most Popular</Badge>
+                                </div>
+                            )}
+
+                            {retryPlanId === plan.id && (
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform">
+                                    <Badge className="bg-orange-500 text-white">Try Again</Badge>
                                 </div>
                             )}
 
@@ -195,15 +295,8 @@ export default function UserOnboarding({ plans, stripePublishableKey }: Props) {
                                     </div>
                                 )}
 
-                                <Button
-                                    className="w-full"
-                                    variant={plan.sort_order === 1 ? 'default' : 'outline'}
-                                    size="lg"
-                                    disabled={loading}
-                                >
-                                    {loading && selectedPlan?.id === plan.id && (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    )}
+                                <Button className="w-full" variant={plan.sort_order === 1 ? 'default' : 'outline'} size="lg" disabled={loading}>
+                                    {loading && selectedPlan?.id === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Get Started
                                 </Button>
                             </CardContent>

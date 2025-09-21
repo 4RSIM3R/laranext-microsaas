@@ -8,6 +8,7 @@ alwaysApply: true
 - **Do not** add banner comments, didactic explanations, or verbose walkthroughs unless explicitly asked.
 - Prefer **diff-sized edits** and **surgical patches** over full-file rewrites.
 - Only touch files necessary to satisfy the request.
+- Do not add bloated comment or readme
 
 # Safety Rails
 - **Never** create new files unless the user asked for them or the task truly requires them. If new files are essential, propose the smallest set and explain why in one sentence.

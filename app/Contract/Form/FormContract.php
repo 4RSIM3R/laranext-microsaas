@@ -7,6 +7,8 @@ use App\Contract\BaseContract;
 interface FormContract extends BaseContract
 {
     public function findBySlug(string $slug);
+    public function findByEmbedCode(string $embedCode);
+    public function generateEmbedCode(int $id);
     public function createWithPages(array $data, array $pages = []);
     public function updateWithPages(int $id, array $data, array $pages = []);
     public function duplicate(int $id);

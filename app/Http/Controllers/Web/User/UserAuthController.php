@@ -67,6 +67,18 @@ class UserAuthController extends Controller
             return WebResponse::response($result, "user.auth.register");
         }
 
+        // Auto-login the user after successful registration
+        $credentials = $request->only('email', 'password');
+        if (Auth::guard('user')->attempt($credentials)) {
+            $request->session()->regenerate();
+
+            return WebResponse::response(
+                $result,
+                "user.dashboard.onboarding"
+            );
+        }
+
+        // Fallback to login page if auto-login fails
         return WebResponse::response(
             $result,
             "user.auth.login"

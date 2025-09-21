@@ -74,6 +74,9 @@ export interface Form {
     slug: string;
     description?: string;
     settings: FormSettings;
+    est_conversion?: number;
+    view_count?: number;
+    embed_code?: string;
     is_active: boolean;
     user_id: number;
     pages?: FormPage[];

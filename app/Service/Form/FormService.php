@@ -25,6 +25,29 @@ class FormService extends BaseService implements FormContract
         return $this->model->where('slug', $slug)->with($this->relation)->first();
     }
 
+    public function findByEmbedCode(string $embedCode)
+    {
+        return $this->model->where('embed_code', $embedCode)->with($this->relation)->first();
+    }
+
+    public function generateEmbedCode(int $id)
+    {
+        $form = $this->find($id);
+        if (!$form) {
+            throw new Exception('Form not found');
+        }
+
+        // Generate unique embed code
+        do {
+            $embedCode = Str::random(16);
+        } while ($this->model->where('embed_code', $embedCode)->exists());
+
+        $form->embed_code = $embedCode;
+        $form->save();
+
+        return $form->fresh();
+    }
+
     public function createWithPages(array $data, array $pages = [])
     {
         $data['slug'] = Str::slug($data['name']);

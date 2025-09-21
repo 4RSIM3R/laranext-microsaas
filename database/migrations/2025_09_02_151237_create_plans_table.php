@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->decimal('price')->default(0);
-            $table->decimal('signup_fee')->default(0);
             $table->unsignedInteger('trial_period')->default(0);
             $table->string('trial_interval')->default('day');
             $table->unsignedInteger('invoice_period')->default(0);
@@ -28,7 +27,6 @@ return new class extends Migration
             $table->unsignedInteger('prorate_day')->nullable();
             $table->unsignedInteger('prorate_period')->nullable();
             $table->unsignedInteger('prorate_extend_due')->nullable();
-            $table->unsignedInteger('active_subscribers_limit')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->string('stripe_price_id')->nullable()->unique();
             $table->string('currency', 3)->default('usd');

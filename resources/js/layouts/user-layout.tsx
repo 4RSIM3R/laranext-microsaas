@@ -25,16 +25,16 @@ import { useSidebarState } from '@/hooks/use-sidebar-state';
 import { FormResponse } from '@/lib/constant';
 import { initial_name } from '@/lib/format';
 import { logout } from '@/routes/admin/auth';
+import dashboard from '@/routes/user/dashboard';
+import form from '@/routes/user/form';
+import profile from '@/routes/user/profile';
+import setting from '@/routes/user/setting';
 import type { SharedData } from '@/types';
 import type { MenuGroup } from '@/types/ui';
 import { useForm, usePage } from '@inertiajs/react';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { Building2, ChevronsUpDown, FileEdit, Home, LogOut, Settings, User } from 'lucide-react';
 import { Toaster } from 'sonner';
-import dashboard from '@/routes/user/dashboard';
-import profile from '@/routes/user/profile';
-import form from '@/routes/user/form';
-import setting from '@/routes/user/setting';
 
 type UserLayoutProps = {
     children: React.ReactNode;
@@ -172,7 +172,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
                 <SidebarRail />
             </Sidebar>
 
-            <SidebarInset>
+            <SidebarInset className="overflow-hidden">
                 <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
                     <SidebarTrigger className="size-8" />
                 </header>

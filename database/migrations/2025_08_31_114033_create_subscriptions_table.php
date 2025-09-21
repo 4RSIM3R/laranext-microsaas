@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id');
             $table->string('type');
-            $table->string('stripe_id')->unique();
+            $table->string('stripe_id');
             $table->string('stripe_status');
             $table->string('stripe_price')->nullable();
             $table->integer('quantity')->nullable();

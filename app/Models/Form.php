@@ -17,12 +17,15 @@ class Form extends Model
         'slug',
         'description',
         'settings',
+        'est_conversion',
+        'view_count',
         'is_active',
         'user_id',
     ];
 
     protected $casts = [
         'settings' => 'array',
+        'est_conversion' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
@@ -34,6 +37,11 @@ class Form extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(Submission::class);
     }
 
     public function getFirstPageAttribute()
@@ -95,5 +103,24 @@ class Form extends Model
             default:
                 return false;
         }
+    }
+
+    public function incrementViewCount()
+    {
+        $this->increment('view_count');
+    }
+
+    public function getAnalytics()
+    {
+        $submissionCount = $this->submissions()->count();
+        $conversionValue = $submissionCount * $this->est_conversion;
+        $conversionRate = $this->view_count > 0 ? ($submissionCount / $this->view_count) * 100 : 0;
+
+        return [
+            'total_views' => $this->view_count,
+            'total_submissions' => $submissionCount,
+            'conversion_rate' => round($conversionRate, 2),
+            'conversion_value' => $conversionValue,
+        ];
     }
 }

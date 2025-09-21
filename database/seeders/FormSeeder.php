@@ -39,6 +39,8 @@ class FormSeeder extends Seeder
                     'google_analytics' => 'UA-123456789-1'
                 ]
             ],
+            'est_conversion' => 25.00,
+            'view_count' => 150,
             'is_active' => true,
             'user_id' => $user->id,
         ]);
@@ -252,6 +254,8 @@ class FormSeeder extends Seeder
                     'google_analytics' => null
                 ]
             ],
+            'est_conversion' => 15.00,
+            'view_count' => 75,
             'is_active' => true,
             'user_id' => $user->id,
         ]);
@@ -327,6 +331,8 @@ class FormSeeder extends Seeder
                     'google_analytics' => null
                 ]
             ],
+            'est_conversion' => 12.50,
+            'view_count' => 200,
             'is_active' => true,
             'user_id' => $user->id,
         ]);
@@ -368,7 +374,7 @@ class FormSeeder extends Seeder
             'type' => 'radio',
             'required' => true,
             'sort_order' => 1,
-            
+
             'options' => [
                 ['value' => 'under_17', 'label' => 'Under 17 years old'],
                 ['value' => '17_or_older', 'label' => '17 years or older']
@@ -550,6 +556,8 @@ class FormSeeder extends Seeder
                     'google_analytics' => null
                 ]
             ],
+            'est_conversion' => 8.75,
+            'view_count' => 50,
             'is_active' => true,
             'user_id' => $user->id,
         ]);
