@@ -13,6 +13,7 @@ Route::group(['middleware' => 'auth:user', 'prefix' => 'dashboard/form', 'as' =>
     Route::get('{id}/submissions', [UserFormController::class, 'submissions'])->name('submissions');
     Route::get('{id}/builder', [UserFormController::class, 'builder'])->name('builder');
     Route::post('{id}/generate-embed', [UserFormController::class, 'generateEmbed'])->name('generate-embed');
+    Route::post('{id}/generate-custom-embed', [UserFormController::class, 'generateCustomEmbed'])->name('generate-custom-embed');
     Route::put('{id}', [UserFormController::class, 'update'])->name('update');
     Route::delete('{id}', [UserFormController::class, 'destroy'])->name('destroy');
 });

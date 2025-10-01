@@ -97,6 +97,160 @@ class UserFormController extends Controller
         ]);
     }
 
+    public function generateCustomEmbed($id)
+    {
+        $form = $this->service->generateEmbedCode($id);
+
+        $cssTemplate = <<<CSS
+/* Form Container */
+#form-container { max-width: 42rem; margin: 0 auto; }
+.form-card { background: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.5rem; }
+
+/* Form Header */
+.form-header { margin-bottom: 1.5rem; }
+.form-header-content { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-page-title { font-size: 1.5rem; font-weight: 600; color: #1f2937; }
+.form-page-description { color: #6b7280; }
+.form-progress-badge { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 9999px; padding: 0.25rem 0.75rem; font-size: 0.875rem; }
+
+/* Progress Bar */
+.form-progress-container { margin-top: 1rem; }
+.form-progress-bar { height: 0.5rem; background: #3b82f6; border-radius: 9999px; transition: width 0.3s; }
+.form-progress-text { text-align: center; font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; }
+
+/* Form Groups */
+.form-group { margin-bottom: 1.5rem; }
+.form-label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: #374151; }
+.form-required { color: #ef4444; margin-left: 0.25rem; }
+
+/* Input Fields */
+.form-input, .form-textarea, .form-select { 
+    width: 100%; 
+    padding: 0.5rem 0.75rem; 
+    border: 1px solid #d1d5db; 
+    border-radius: 0.375rem; 
+    font-size: 1rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.form-input[aria-invalid="true"], .form-textarea[aria-invalid="true"], .form-select[aria-invalid="true"] {
+    border-color: #ef4444;
+}
+
+/* Radio and Checkbox */
+.form-radio-group, .form-checkbox-group { display: flex; flex-direction: column; gap: 0.75rem; }
+.form-radio-item, .form-checkbox-item { display: flex; align-items: center; gap: 0.5rem; }
+.form-radio-input, .form-checkbox-input { width: 1rem; height: 1rem; cursor: pointer; }
+.form-radio-label, .form-checkbox-label { cursor: pointer; }
+
+/* Password Field */
+.form-password-wrapper { position: relative; }
+.form-password-input { padding-right: 2.5rem; }
+.form-password-toggle { 
+    position: absolute; 
+    right: 0.75rem; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    color: #9ca3af;
+}
+
+/* Help Text and Errors */
+.form-help { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; }
+.form-char-count { text-align: right; font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
+.form-error { display: flex; align-items: center; gap: 0.25rem; font-size: 0.875rem; color: #ef4444; margin-top: 0.25rem; }
+.form-error-icon { width: 1rem; height: 1rem; }
+.form-general-error { 
+    padding: 1rem; 
+    background: #fef2f2; 
+    border: 1px solid #fee2e2; 
+    border-radius: 0.375rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    color: #dc2626; 
+}
+
+/* Form Footer */
+.form-footer { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-top: 1.5rem; 
+    padding-top: 1.5rem; 
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Buttons */
+.form-btn { 
+    padding: 0.5rem 1rem; 
+    border-radius: 0.375rem; 
+    font-weight: 500; 
+    cursor: pointer; 
+    transition: opacity 0.15s;
+    border: none;
+}
+.form-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-btn-primary { background: #3b82f6; color: #ffffff; }
+.form-btn-primary:hover:not(:disabled) { opacity: 0.9; }
+.form-btn-secondary { background: #ffffff; color: #374151; border: 1px solid #d1d5db; }
+.form-btn-secondary:hover:not(:disabled) { background: #f9fafb; }
+.form-spinner { 
+    display: inline-block; 
+    width: 1rem; 
+    height: 1rem; 
+    margin-right: 0.5rem; 
+    border: 2px solid #ffffff; 
+    border-top-color: transparent; 
+    border-radius: 50%; 
+    animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Success State */
+.form-success { text-align: center; padding: 2rem; }
+.form-success-icon { 
+    width: 4rem; 
+    height: 4rem; 
+    margin: 0 auto 1rem; 
+    background: #d1fae5; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+.form-icon-check { width: 2rem; height: 2rem; color: #059669; }
+.form-success-title { font-size: 1.875rem; font-weight: 600; color: #1f2937; margin-bottom: 1rem; }
+.form-success-message { color: #6b7280; }
+
+/* Icons */
+.form-icon { width: 1rem; height: 1rem; }
+CSS;
+
+        $embedUrl = route('forms.custom-embed', $form->embed_code);
+        $embedCodeWithCss = <<<HTML
+<!-- Option 1: Embed without custom CSS (unstyled) -->
+<iframe src="{$embedUrl}" width="100%" height="600" frameborder="0"></iframe>
+
+<!-- Option 2: Embed with your custom CSS file -->
+<iframe src="{$embedUrl}?css=https://your-site.com/form-styles.css" width="100%" height="600" frameborder="0"></iframe>
+HTML;
+
+        return response()->json([
+            'success' => true,
+            'data' => $form,
+            'embed_url' => $embedUrl,
+            'embed_code' => $embedCodeWithCss,
+            'css_template' => $cssTemplate
+        ]);
+    }
+
     public function submissions($id)
     {
         $form = $this->service->find($id);

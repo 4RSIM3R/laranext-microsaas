@@ -19,21 +19,36 @@ export default function UserFormIndex() {
         isOpen: boolean;
         embedUrl: string;
         embedCode: string;
+        customEmbedUrl?: string;
+        customEmbedCode?: string;
+        cssTemplate?: string;
     }>({
         isOpen: false,
         embedUrl: '',
         embedCode: '',
+        customEmbedUrl: '',
+        customEmbedCode: '',
+        cssTemplate: '',
     });
 
     const handleGenerateEmbed = async (formId: number) => {
         try {
-            const response = await axios.post(form.generateEmbed(formId).url);
-            const { embed_url, embed_code } = response.data;
+            // Generate both standard and custom embeds
+            const [standardResponse, customResponse] = await Promise.all([
+                axios.post(form.generateEmbed(formId).url),
+                axios.post(form.generateCustomEmbed(formId).url),
+            ]);
+
+            const { embed_url, embed_code } = standardResponse.data;
+            const { embed_url: custom_embed_url, embed_code: custom_embed_code, css_template } = customResponse.data;
 
             setEmbedModal({
                 isOpen: true,
                 embedUrl: embed_url,
                 embedCode: embed_code,
+                customEmbedUrl: custom_embed_url,
+                customEmbedCode: custom_embed_code,
+                cssTemplate: css_template,
             });
         } catch (error) {
             console.error('Failed to generate embed code:', error);
@@ -143,6 +158,9 @@ export default function UserFormIndex() {
                 onClose={() => setEmbedModal((prev) => ({ ...prev, isOpen: false }))}
                 embedUrl={embedModal.embedUrl}
                 embedCode={embedModal.embedCode}
+                customEmbedUrl={embedModal.customEmbedUrl}
+                customEmbedCode={embedModal.customEmbedCode}
+                cssTemplate={embedModal.cssTemplate}
             />
         </div>
     );

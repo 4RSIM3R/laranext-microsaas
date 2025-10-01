@@ -68,4 +68,24 @@ class FormViewerController extends Controller
             'form' => $form
         ]);
     }
+
+    public function customEmbed($embedCode)
+    {
+        $form = $this->formService->findByEmbedCode($embedCode);
+
+        if (!$form) {
+            abort(404);
+        }
+
+        if (!$form->is_active) {
+            abort(404);
+        }
+
+        // Increment view count
+        $form->incrementViewCount();
+
+        return Inertia::render('public/FormEmbedCustom', [
+            'form' => $form
+        ]);
+    }
 }

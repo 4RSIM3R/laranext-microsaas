@@ -11,6 +11,7 @@ Route::get('', [HomeController::class, 'index'])->name('home');
 Route::get('forms/{slug}', [FormViewerController::class, 'show'])->name('forms.public.show');
 Route::get('preview/form/{id}', [FormViewerController::class, 'preview'])->name('forms.preview');
 Route::get('embed/{embedCode}', [FormViewerController::class, 'embed'])->name('forms.embed');
+Route::get('custom-embed/{embedCode}', [FormViewerController::class, 'customEmbed'])->name('forms.custom-embed');
 
 // Form submission routes
 Route::post('submissions', [SubmissionController::class, 'submit'])->name('submissions.submit');

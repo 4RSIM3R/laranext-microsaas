@@ -82,6 +82,7 @@ interface FormEmbedProps {
 
 export default function FormEmbed({ form }: FormEmbedProps) {
     const [currentPageIndex, setCurrentPageIndex] = useState(0);
+    const [navigationHistory, setNavigationHistory] = useState<number[]>([0]);
     const [formData, setFormData] = useState<Record<string, any>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -114,10 +115,27 @@ export default function FormEmbed({ form }: FormEmbedProps) {
         currentPage.fields.forEach((field) => {
             const value = formData[field.name];
 
-            if (field.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
-                newErrors[field.name] = `${field.label} is required`;
+            // Check required fields
+            if (field.required) {
+                if (field.type === 'checkbox' && field.options && field.options.length > 1) {
+                    // For multiple checkboxes, at least one must be selected
+                    if (!value || (Array.isArray(value) && value.length === 0)) {
+                        newErrors[field.name] = `${field.label} is required`;
+                    }
+                } else if (field.type === 'checkbox') {
+                    // For single checkbox, it must be checked
+                    if (!value) {
+                        newErrors[field.name] = `${field.label} is required`;
+                    }
+                } else {
+                    // For other fields, value must not be empty
+                    if (!value || (typeof value === 'string' && value.trim() === '')) {
+                        newErrors[field.name] = `${field.label} is required`;
+                    }
+                }
             }
 
+            // Email validation
             if (value && field.validation) {
                 field.validation.forEach((rule) => {
                     if (rule === 'email' && value) {
@@ -128,42 +146,80 @@ export default function FormEmbed({ form }: FormEmbedProps) {
                     }
                 });
             }
+
+            // Phone validation
+            if (field.type === 'phone' && value) {
+                const phoneRegex = /^[\d\s\-+()]+$/;
+                if (!phoneRegex.test(value) || value.replace(/\D/g, '').length < 10) {
+                    newErrors[field.name] = 'Please enter a valid phone number';
+                }
+            }
         });
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const evaluateConditionalLogic = (logic: ConditionalLogic): number | null => {
-        if (!logic.rules || logic.rules.length === 0) {
-            return logic.default_next_page_offset ?? null;
+    const evaluateCondition = (rule: ConditionalRule): boolean => {
+        const fieldValue = formData[rule.field];
+
+        switch (rule.operator) {
+            case 'equals':
+                if (Array.isArray(fieldValue)) {
+                    return fieldValue.includes(rule.value);
+                }
+                return fieldValue == rule.value;
+            case 'not_equals':
+                if (Array.isArray(fieldValue)) {
+                    return !fieldValue.includes(rule.value);
+                }
+                return fieldValue != rule.value;
+            case 'contains':
+                return fieldValue && fieldValue.toString().includes(rule.value.toString());
+            case 'not_contains':
+                return !fieldValue || !fieldValue.toString().includes(rule.value.toString());
+            default:
+                return false;
+        }
+    };
+
+    const getNextPageIndex = (): number | null => {
+        if (!currentPage.conditional_logic) {
+            // Default linear progression
+            return currentPageIndex < totalPages - 1 ? currentPageIndex + 1 : null;
         }
 
-        for (const rule of logic.rules) {
-            const fieldValue = formData[rule.field];
-            let conditionMet = false;
+        const logic = currentPage.conditional_logic;
 
-            switch (rule.operator) {
-                case 'equals':
-                    conditionMet = fieldValue === rule.value;
-                    break;
-                case 'not_equals':
-                    conditionMet = fieldValue !== rule.value;
-                    break;
-                case 'contains':
-                    conditionMet = fieldValue && fieldValue.toString().includes(rule.value);
-                    break;
-                case 'not_contains':
-                    conditionMet = !fieldValue || !fieldValue.toString().includes(rule.value);
-                    break;
-            }
-
-            if (conditionMet && rule.next_page_offset !== undefined) {
-                return rule.next_page_offset;
+        // Check conditional rules first
+        if (logic.rules && logic.rules.length > 0) {
+            for (const rule of logic.rules) {
+                if (evaluateCondition(rule)) {
+                    // Use offset-based navigation
+                    if (rule.next_page_offset !== undefined) {
+                        const targetIndex = currentPageIndex + rule.next_page_offset;
+                        if (targetIndex < totalPages) {
+                            return targetIndex;
+                        }
+                        // If offset leads beyond pages, end the form
+                        return null;
+                    }
+                }
             }
         }
 
-        return logic.default_next_page_offset ?? null;
+        // Check for default_next_page_offset
+        if (logic.default_next_page_offset !== undefined && logic.default_next_page_offset !== null) {
+            const targetIndex = currentPageIndex + logic.default_next_page_offset;
+            if (targetIndex >= 0 && targetIndex < totalPages) {
+                return targetIndex;
+            }
+            // If offset leads to invalid index, end the form
+            return null;
+        }
+
+        // Default to linear progression
+        return currentPageIndex < totalPages - 1 ? currentPageIndex + 1 : null;
     };
 
     const handleNext = () => {
@@ -171,35 +227,24 @@ export default function FormEmbed({ form }: FormEmbedProps) {
             return;
         }
 
-        const logic = currentPage.conditional_logic;
-        if (logic) {
-            const nextPageOffset = evaluateConditionalLogic(logic);
+        const nextIndex = getNextPageIndex();
 
-            if (nextPageOffset === null) {
-                // End of form
-                handleSubmit();
-                return;
-            }
-
-            const nextPageIndex = currentPageIndex + nextPageOffset;
-            if (nextPageIndex < totalPages) {
-                setCurrentPageIndex(nextPageIndex);
-            } else {
-                handleSubmit();
-            }
+        if (nextIndex !== null && nextIndex >= 0) {
+            // Add current page to navigation history
+            setNavigationHistory((prev) => [...prev, currentPageIndex]);
+            setCurrentPageIndex(nextIndex);
         } else {
-            // No conditional logic, go to next page or submit
-            if (currentPageIndex < totalPages - 1) {
-                setCurrentPageIndex(currentPageIndex + 1);
-            } else {
-                handleSubmit();
-            }
+            // End of form - submit
+            handleSubmit();
         }
     };
 
     const handlePrevious = () => {
-        if (currentPageIndex > 0) {
-            setCurrentPageIndex(currentPageIndex - 1);
+        if (navigationHistory.length > 1) {
+            // Remove current page from history and go back to previous page
+            const newHistory = navigationHistory.slice(0, -1);
+            setNavigationHistory(newHistory);
+            setCurrentPageIndex(newHistory[newHistory.length - 1]);
         }
     };
 
@@ -490,9 +535,13 @@ export default function FormEmbed({ form }: FormEmbedProps) {
                     <Separator />
 
                     <div className="flex justify-between">
-                        <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentPageIndex === 0}>
-                            Previous
-                        </Button>
+                        {navigationHistory.length > 1 ? (
+                            <Button type="button" variant="outline" onClick={handlePrevious} disabled={isSubmitting}>
+                                Previous
+                            </Button>
+                        ) : (
+                            <div></div>
+                        )}
 
                         <Button
                             type="button"
@@ -507,7 +556,7 @@ export default function FormEmbed({ form }: FormEmbedProps) {
                                     Submitting...
                                 </>
                             ) : (
-                                currentPage.settings?.button_text || (currentPageIndex === totalPages - 1 ? 'Submit' : 'Continue')
+                                currentPage.settings?.button_text || 'Continue'
                             )}
                         </Button>
                     </div>
