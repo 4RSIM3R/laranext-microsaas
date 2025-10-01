@@ -20,6 +20,7 @@ interface FormData {
     name: string;
     slug: string;
     description: string;
+    submission_rate: string;
     settings: {
         theme: {
             primary_color: string;
@@ -44,6 +45,7 @@ export default function UserFormForm({ form }: Props) {
         name: form?.name || '',
         slug: form?.slug || '',
         description: form?.description || '',
+        submission_rate: form?.submission_rate?.toString() || '0',
         settings: {
             theme: {
                 primary_color: '#3b82f6',
@@ -69,6 +71,7 @@ export default function UserFormForm({ form }: Props) {
                 name: form.name,
                 slug: form.slug,
                 description: form.description || '',
+                submission_rate: form.submission_rate?.toString() || '0',
                 settings: {
                     theme: form.settings.theme,
                     notifications: {
@@ -165,6 +168,19 @@ export default function UserFormForm({ form }: Props) {
                                 rows={3}
                             />
                             <InputError message={errors?.description} />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="submission_rate">Submission Rate</Label>
+                            <Input
+                                id="submission_rate"
+                                type="text"
+                                inputMode="decimal"
+                                value={data.submission_rate}
+                                onChange={(e) => setData('submission_rate', e.target.value)}
+                                placeholder="0.00"
+                            />
+                            <InputError message={errors?.submission_rate} />
                         </div>
                     </CardContent>
                 </Card>

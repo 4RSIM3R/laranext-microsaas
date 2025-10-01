@@ -78,7 +78,7 @@ export default function FormDetail({ form, analytics }: Props) {
                     {form.description && <p className="text-muted-foreground">{form.description}</p>}
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                         <span>Slug: {form.slug}</span>
-                        <span>Est. Conversion: {formatCurrency(form.est_conversion || 0)}</span>
+                        <span>Submission Rate: {form.submission_rate || 0}%</span>
                         <span>Created: {new Date(form.created_at || '').toLocaleDateString()}</span>
                     </div>
                 </div>
@@ -167,6 +167,10 @@ export default function FormDetail({ form, analytics }: Props) {
                                         <span className="text-sm font-medium">Est. Value per Conversion</span>
                                         <span className="text-sm">{formatCurrency(form.est_conversion || 0)}</span>
                                     </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">Submission Rate</span>
+                                        <span className="text-sm">{form.submission_rate || 0}%</span>
+                                    </div>
                                     <div className="flex items-center justify-between border-t pt-4">
                                         <span className="text-sm font-medium">Total Conversion Value</span>
                                         <span className="text-sm font-bold">{formatCurrency(analytics.conversion_value)}</span>
@@ -198,6 +202,10 @@ export default function FormDetail({ form, analytics }: Props) {
                                         >
                                             View <ExternalLink className="ml-1 h-3 w-3" />
                                         </Link>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">Submission Rate</span>
+                                        <span className="text-sm">{form.submission_rate || 0}%</span>
                                     </div>
                                     {form.embed_code && (
                                         <div className="flex items-center justify-between">

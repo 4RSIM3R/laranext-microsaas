@@ -19,6 +19,7 @@ class Form extends Model
         'settings',
         'est_conversion',
         'view_count',
+        'submission_rate',
         'is_active',
         'user_id',
     ];
@@ -26,6 +27,7 @@ class Form extends Model
     protected $casts = [
         'settings' => 'array',
         'est_conversion' => 'decimal:2',
+        'submission_rate' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 

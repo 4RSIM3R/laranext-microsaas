@@ -76,6 +76,7 @@ export interface Form {
     settings: FormSettings;
     est_conversion?: number;
     view_count?: number;
+    submission_rate?: number;
     embed_code?: string;
     is_active: boolean;
     user_id: number;

@@ -11,7 +11,7 @@ import { Form } from '@/types/form';
 import { Link } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
-import { BarChart3, Code, Eye, Plus } from 'lucide-react';
+import { BarChart3, Code, ExternalLink, Eye, Pencil, Plus } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 export default function UserFormIndex() {
@@ -83,19 +83,6 @@ export default function UserFormIndex() {
             enableColumnFilter: false,
             enableHiding: false,
         }),
-        helper.accessor('description', {
-            id: 'description',
-            header: 'Public Preview',
-            enableColumnFilter: false,
-            enableHiding: false,
-            cell: (row) => (
-                <Link target="_blank" href={forms.preview(row.row.original.id).url}>
-                    <Button variant="outline" size="sm">
-                        Preview
-                    </Button>
-                </Link>
-            ),
-        }),
         helper.display({
             id: 'created_at',
             header: 'Created At',
@@ -123,7 +110,17 @@ export default function UserFormIndex() {
                         </Link>
                         <Link href={form.builder(row.row.original.id).url}>
                             <DropdownMenuItem>
-                                <Eye /> Builder
+                                <Pencil /> Builder
+                            </DropdownMenuItem>
+                        </Link>
+                        <Link href={forms.preview(row.row.original.id).url} target="_blank">
+                            <DropdownMenuItem>
+                                <Eye /> Preview
+                            </DropdownMenuItem>
+                        </Link>
+                        <Link href={forms.public.show(row.row.original.slug).url} target="_blank">
+                            <DropdownMenuItem>
+                                <ExternalLink /> View Public
                             </DropdownMenuItem>
                         </Link>
                         <DropdownMenuItem onClick={() => handleGenerateEmbed(row.row.original.id)}>

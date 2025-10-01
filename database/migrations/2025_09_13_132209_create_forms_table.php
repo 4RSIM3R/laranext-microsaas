@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('embed_code', 32)->unique()->nullable();
             $table->integer('view_count')->default(0);
             $table->boolean('is_active')->default(true);
+            $table->decimal('submission_rate')->default(0);
             $table->timestamps();
             $table->index('slug');
             $table->index('user_id');

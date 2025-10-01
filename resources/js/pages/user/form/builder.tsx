@@ -4,11 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import FieldManager from '@/components/user/form/field-manager';
 import FormSettings from '@/components/user/form/form-settings';
 import PageManager from '@/components/user/form/page-manager';
-import { Form, FormField, FormPage } from '@/types/form';
-import { useForm } from '@inertiajs/react';
-import { EyeIcon, SaveIcon, ShareIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import publicFormRoutes from '@/routes/forms/public';
 import routes from '@/routes/user';
+import { Form, FormField, FormPage } from '@/types/form';
+import { router } from '@inertiajs/react';
+import { ArrowLeftIcon, EyeIcon, SaveIcon, ShareIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 type Props = {
     form?: Form;
@@ -19,17 +20,18 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
     const [activeTab, setActiveTab] = useState('builder');
     const [isSaving, setIsSaving] = useState(false);
 
-    const formRequest = useForm('form', {
+    const [formData, setFormData] = useState({
         id: initialForm?.id || 0,
         name: initialForm?.name || '',
         slug: initialForm?.slug || '',
         description: initialForm?.description || '',
+        submission_rate: initialForm?.submission_rate || 0,
         settings: initialForm?.settings || {
             theme: {
                 primary_color: '#3b82f6',
                 background_color: '#ffffff',
                 text_color: '#374151',
-                button_style: 'rounded',
+                button_style: 'rounded' as const,
             },
             notifications: {
                 email_notification: false,
@@ -46,16 +48,16 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
     });
 
     useEffect(() => {
-        if (formRequest.data.pages && formRequest.data.pages.length > 0 && !selectedPageId) {
-            setSelectedPageId(formRequest.data.pages[0].id);
+        if (formData.pages && formData.pages.length > 0 && !selectedPageId) {
+            setSelectedPageId(formData.pages[0].id);
         }
-    }, [formRequest.data.pages, selectedPageId]);
+    }, [formData.pages, selectedPageId]);
 
     const handleAddPage = (pageData: Omit<FormPage, 'id' | 'form_id' | 'created_at' | 'updated_at'>) => {
         const newPage: FormPage = {
             ...pageData,
-            id: Date.now(), // Temporary ID
-            form_id: formRequest.data.id,
+            id: Date.now(),
+            form_id: formData.id,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             fields: [],
@@ -65,21 +67,21 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
             },
         };
 
-        const currentPages = formRequest.data.pages || [];
-        formRequest.setData('pages', [...currentPages, newPage]);
+        const currentPages = formData.pages || [];
+        setFormData({ ...formData, pages: [...currentPages, newPage] });
         setSelectedPageId(newPage.id);
     };
 
     const handleUpdatePage = (pageId: number, updates: Partial<FormPage>) => {
-        const currentPages = formRequest.data.pages || [];
+        const currentPages = formData.pages || [];
         const updatedPages = currentPages.map((page) => (page.id === pageId ? { ...page, ...updates } : page));
-        formRequest.setData('pages', updatedPages);
+        setFormData({ ...formData, pages: updatedPages });
     };
 
     const handleDeletePage = (pageId: number) => {
-        const currentPages = formRequest.data.pages || [];
+        const currentPages = formData.pages || [];
         const updatedPages = currentPages.filter((page) => page.id !== pageId);
-        formRequest.setData('pages', updatedPages);
+        setFormData({ ...formData, pages: updatedPages });
 
         if (selectedPageId === pageId) {
             setSelectedPageId(updatedPages.length > 0 ? updatedPages[0].id : undefined);
@@ -91,12 +93,12 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
 
         const newField: FormField = {
             ...fieldData,
-            id: Date.now(), // Temporary ID
+            id: Date.now(),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
         };
 
-        const currentPages = formRequest.data.pages || [];
+        const currentPages = formData.pages || [];
         const updatedPages = currentPages.map((page) =>
             page.id === selectedPageId
                 ? {
@@ -105,13 +107,13 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
                   }
                 : page,
         );
-        formRequest.setData('pages', updatedPages);
+        setFormData({ ...formData, pages: updatedPages });
     };
 
     const handleUpdateField = (fieldId: number, updates: Partial<FormField>) => {
         if (!selectedPageId) return;
 
-        const currentPages = formRequest.data.pages || [];
+        const currentPages = formData.pages || [];
         const updatedPages = currentPages.map((page) => {
             if (page.id === selectedPageId) {
                 const currentFields = page.fields || [];
@@ -120,13 +122,13 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
             }
             return page;
         });
-        formRequest.setData('pages', updatedPages);
+        setFormData({ ...formData, pages: updatedPages });
     };
 
     const handleDeleteField = (fieldId: number) => {
         if (!selectedPageId) return;
 
-        const currentPages = formRequest.data.pages || [];
+        const currentPages = formData.pages || [];
         const updatedPages = currentPages.map((page) => {
             if (page.id === selectedPageId) {
                 const currentFields = page.fields || [];
@@ -135,32 +137,25 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
             }
             return page;
         });
-        formRequest.setData('pages', updatedPages);
+        setFormData({ ...formData, pages: updatedPages });
     };
 
     const handleUpdateForm = (updates: Partial<Form>) => {
-        Object.keys(updates).forEach((key) => {
-            const formKey = key as keyof Form;
-            if (formKey !== 'created_at' && formKey !== 'updated_at') {
-                formRequest.setData(formKey, updates[formKey]);
-            }
-        });
+        setFormData({ ...formData, ...updates });
     };
 
     const handleSave = () => {
         setIsSaving(true);
 
-        if (formRequest.data.id === 0) {
-            // Create new form
-            formRequest.post(routes.form.store().url, {
+        if (formData.id === 0) {
+            router.post(routes.form.store().url, formData as any, {
                 onFinish: () => setIsSaving(false),
                 onSuccess: () => {
                     // Form was created successfully
                 },
             });
         } else {
-            // Update existing form
-            formRequest.put(routes.form.update(formRequest.data.id).url, {
+            router.put(routes.form.update(formData.id).url, formData as any, {
                 onFinish: () => setIsSaving(false),
                 onSuccess: () => {
                     // Form was updated successfully
@@ -169,26 +164,32 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
         }
     };
 
-    const selectedPage = formRequest.data.pages?.find((page) => page.id === selectedPageId);
+    const selectedPage = formData.pages?.find((page) => page.id === selectedPageId);
 
     return (
         <div className="space-y-4 p-4">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                    <h1 className="text-2xl font-semibold">{formRequest.data.name || 'Untitled Form'}</h1>
-                    <p className="text-sm text-gray-500">{formRequest.data.description || 'Create your form by adding pages and fields'}</p>
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => router.visit(routes.dashboard.index().url)}>
+                            <ArrowLeftIcon className="h-4 w-4" />
+                        </Button>
+                        <h1 className="text-2xl font-semibold">{formData.name || 'Untitled Form'}</h1>
+                    </div>
+                    <p className="ml-11 text-sm text-gray-500">{formData.description || 'Create your form by adding pages and fields'}</p>
                 </div>
                 <div className="flex items-center space-x-2">
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                            const previewUrl = formRequest.data.id && formRequest.data.id !== 0 ? `/forms/${formRequest.data.slug || formRequest.data.id}/preview` : '#';
-                            if (previewUrl !== '#') {
+                            if (formData.id && formData.id !== 0 && formData.slug) {
+                                const previewUrl = publicFormRoutes.show(formData.slug).url;
                                 window.open(previewUrl, '_blank');
                             }
                         }}
+                        disabled={!formData.id || formData.id === 0 || !formData.slug}
                     >
                         <EyeIcon className="mr-1 h-4 w-4" />
                         Preview
@@ -197,8 +198,8 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                            if (formRequest.data.id && formRequest.data.id !== 0) {
-                                const shareUrl = `${window.location.origin}/forms/${formRequest.data.slug || formRequest.data.id}`;
+                            if (formData.id && formData.id !== 0 && formData.slug) {
+                                const shareUrl = `${window.location.origin}${publicFormRoutes.show(formData.slug).url}`;
                                 navigator.clipboard
                                     .writeText(shareUrl)
                                     .then(() => {
@@ -209,6 +210,7 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
                                     });
                             }
                         }}
+                        disabled={!formData.id || formData.id === 0 || !formData.slug}
                     >
                         <ShareIcon className="mr-1 h-4 w-4" />
                         Share
@@ -232,7 +234,7 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
                         {/* Page Manager */}
                         <div className="col-span-4">
                             <PageManager
-                                pages={formRequest.data.pages || []}
+                                pages={formData.pages || []}
                                 selectedPageId={selectedPageId}
                                 onAddPage={handleAddPage}
                                 onUpdatePage={handleUpdatePage}
@@ -284,7 +286,7 @@ export default function UserFormBuilder({ form: initialForm }: Props) {
                 </TabsContent>
 
                 <TabsContent value="settings">
-                    <FormSettings form={formRequest.data as Form} onUpdateForm={handleUpdateForm} onSave={handleSave} isSaving={isSaving} />
+                    <FormSettings form={formData as Form} onUpdateForm={handleUpdateForm} onSave={handleSave} isSaving={isSaving} />
                 </TabsContent>
             </Tabs>
         </div>

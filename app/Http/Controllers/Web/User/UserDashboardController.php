@@ -18,8 +18,21 @@ class UserDashboardController extends Controller
     public function index()
     {
         $user = Auth::guard('user')->user();
+        $userId = $user->id;
+
+        $totalViews = \App\Models\Form::where('user_id', $userId)->sum('view_count');
+        $totalSubmissions = \App\Models\Submission::whereHas('form', function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        })->count();
+        $conversionRate = $totalViews > 0 ? round(($totalSubmissions / $totalViews) * 100, 2) : 0;
+
         return Inertia::render('user/dashboard', [
             'user' => $user,
+            'metrics' => [
+                'total_views' => $totalViews,
+                'new_leads' => $totalSubmissions,
+                'conversion_rate' => $conversionRate,
+            ],
         ]);
     }
 

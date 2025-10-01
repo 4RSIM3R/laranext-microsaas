@@ -41,8 +41,12 @@ class UserFormController extends Controller
 
     public function store(StoreFormRequest $request)
     {
-        $data = $this->service->create($request->validated());
-        return WebResponse::response($data, ['user.form.index']);
+        $validated = $request->validated();
+        $pages = $validated['pages'] ?? [];
+        unset($validated['pages']);
+
+        $data = $this->service->createWithPages($validated, $pages);
+        return WebResponse::response($data, 'user.form.index');
     }
 
     public function show($id)

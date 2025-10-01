@@ -1,12 +1,12 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Form } from '@/types/form';
+import { useState } from 'react';
 
 type Props = {
     form: Form;
@@ -45,7 +45,7 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                 {/* Basic Information */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Basic Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                             <Label htmlFor="form-name">Form Name</Label>
                             <Input
@@ -75,11 +75,19 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                             rows={3}
                         />
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <Switch
-                            checked={form.is_active}
-                            onCheckedChange={(checked) => handleUpdate({ is_active: checked })}
+                    <div>
+                        <Label htmlFor="submission-rate">Submission Rate</Label>
+                        <Input
+                            id="submission-rate"
+                            type="text"
+                            inputMode="decimal"
+                            value={form.submission_rate?.toString() || '0'}
+                            onChange={(e) => handleUpdate({ submission_rate: parseFloat(e.target.value) || 0 })}
+                            placeholder="0.00"
                         />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Switch checked={form.is_active} onCheckedChange={(checked) => handleUpdate({ is_active: checked })} />
                         <Label>Form is active</Label>
                     </div>
                 </div>
@@ -87,22 +95,24 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                 {/* Theme Settings */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Theme Settings</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div>
                             <Label htmlFor="primary-color">Primary Color</Label>
                             <Input
                                 id="primary-color"
                                 type="color"
                                 value={form.settings.theme.primary_color}
-                                onChange={(e) => handleUpdate({
-                                    settings: {
-                                        ...form.settings,
-                                        theme: {
-                                            ...form.settings.theme,
-                                            primary_color: e.target.value
-                                        }
-                                    }
-                                })}
+                                onChange={(e) =>
+                                    handleUpdate({
+                                        settings: {
+                                            ...form.settings,
+                                            theme: {
+                                                ...form.settings.theme,
+                                                primary_color: e.target.value,
+                                            },
+                                        },
+                                    })
+                                }
                             />
                         </div>
                         <div>
@@ -111,15 +121,17 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                                 id="background-color"
                                 type="color"
                                 value={form.settings.theme.background_color}
-                                onChange={(e) => handleUpdate({
-                                    settings: {
-                                        ...form.settings,
-                                        theme: {
-                                            ...form.settings.theme,
-                                            background_color: e.target.value
-                                        }
-                                    }
-                                })}
+                                onChange={(e) =>
+                                    handleUpdate({
+                                        settings: {
+                                            ...form.settings,
+                                            theme: {
+                                                ...form.settings.theme,
+                                                background_color: e.target.value,
+                                            },
+                                        },
+                                    })
+                                }
                             />
                         </div>
                         <div>
@@ -128,15 +140,17 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                                 id="text-color"
                                 type="color"
                                 value={form.settings.theme.text_color}
-                                onChange={(e) => handleUpdate({
-                                    settings: {
-                                        ...form.settings,
-                                        theme: {
-                                            ...form.settings.theme,
-                                            text_color: e.target.value
-                                        }
-                                    }
-                                })}
+                                onChange={(e) =>
+                                    handleUpdate({
+                                        settings: {
+                                            ...form.settings,
+                                            theme: {
+                                                ...form.settings.theme,
+                                                text_color: e.target.value,
+                                            },
+                                        },
+                                    })
+                                }
                             />
                         </div>
                     </div>
@@ -144,15 +158,17 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                         <Label htmlFor="button-style">Button Style</Label>
                         <Select
                             value={form.settings.theme.button_style}
-                            onValueChange={(value) => handleUpdate({
-                                settings: {
-                                    ...form.settings,
-                                    theme: {
-                                        ...form.settings.theme,
-                                        button_style: value as 'rounded' | 'pill'
-                                    }
-                                }
-                            })}
+                            onValueChange={(value) =>
+                                handleUpdate({
+                                    settings: {
+                                        ...form.settings,
+                                        theme: {
+                                            ...form.settings.theme,
+                                            button_style: value as 'rounded' | 'pill',
+                                        },
+                                    },
+                                })
+                            }
                         >
                             <SelectTrigger>
                                 <SelectValue />
@@ -171,15 +187,17 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                     <div className="flex items-center space-x-2">
                         <Switch
                             checked={form.settings.notifications?.email_notification || false}
-                            onCheckedChange={(checked) => handleUpdate({
-                                settings: {
-                                    ...form.settings,
-                                    notifications: {
-                                        ...form.settings.notifications,
-                                        email_notification: checked
-                                    }
-                                }
-                            })}
+                            onCheckedChange={(checked) =>
+                                handleUpdate({
+                                    settings: {
+                                        ...form.settings,
+                                        notifications: {
+                                            ...form.settings.notifications,
+                                            email_notification: checked,
+                                        },
+                                    },
+                                })
+                            }
                         />
                         <Label>Email notifications on submission</Label>
                     </div>
@@ -188,15 +206,17 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                         <Input
                             id="webhook-url"
                             value={form.settings.notifications?.webhook_url || ''}
-                            onChange={(e) => handleUpdate({
-                                settings: {
-                                    ...form.settings,
-                                    notifications: {
-                                        ...form.settings.notifications,
-                                        webhook_url: e.target.value
-                                    }
-                                }
-                            })}
+                            onChange={(e) =>
+                                handleUpdate({
+                                    settings: {
+                                        ...form.settings,
+                                        notifications: {
+                                            ...form.settings.notifications,
+                                            webhook_url: e.target.value,
+                                        },
+                                    },
+                                })
+                            }
                             placeholder="https://your-webhook-url.com"
                         />
                     </div>
@@ -205,21 +225,23 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                 {/* Tracking */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Tracking & Analytics</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                             <Label htmlFor="meta-pixel">Meta Pixel ID</Label>
                             <Input
                                 id="meta-pixel"
                                 value={form.settings.tracking?.meta_pixel || ''}
-                                onChange={(e) => handleUpdate({
-                                    settings: {
-                                        ...form.settings,
-                                        tracking: {
-                                            ...form.settings.tracking,
-                                            meta_pixel: e.target.value
-                                        }
-                                    }
-                                })}
+                                onChange={(e) =>
+                                    handleUpdate({
+                                        settings: {
+                                            ...form.settings,
+                                            tracking: {
+                                                ...form.settings.tracking,
+                                                meta_pixel: e.target.value,
+                                            },
+                                        },
+                                    })
+                                }
                                 placeholder="123456789012345"
                             />
                         </div>
@@ -228,15 +250,17 @@ export default function FormSettings({ form, onUpdateForm, onSave, isSaving = fa
                             <Input
                                 id="google-analytics"
                                 value={form.settings.tracking?.google_analytics || ''}
-                                onChange={(e) => handleUpdate({
-                                    settings: {
-                                        ...form.settings,
-                                        tracking: {
-                                            ...form.settings.tracking,
-                                            google_analytics: e.target.value
-                                        }
-                                    }
-                                })}
+                                onChange={(e) =>
+                                    handleUpdate({
+                                        settings: {
+                                            ...form.settings,
+                                            tracking: {
+                                                ...form.settings.tracking,
+                                                google_analytics: e.target.value,
+                                            },
+                                        },
+                                    })
+                                }
                                 placeholder="G-XXXXXXXXXX"
                             />
                         </div>

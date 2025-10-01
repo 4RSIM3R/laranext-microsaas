@@ -1,14 +1,14 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusIcon, SettingsIcon, TrashIcon, ChevronRightIcon, XIcon } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { FormPage } from '@/types/form';
+import { ChevronRightIcon, PlusIcon, SettingsIcon, TrashIcon, XIcon } from 'lucide-react';
+import { useState } from 'react';
 
 type Props = {
     pages: FormPage[];
@@ -19,14 +19,7 @@ type Props = {
     onSelectPage: (pageId: number) => void;
 };
 
-export default function PageManager({
-    pages,
-    selectedPageId,
-    onAddPage,
-    onUpdatePage,
-    onDeletePage,
-    onSelectPage
-}: Props) {
+export default function PageManager({ pages, selectedPageId, onAddPage, onUpdatePage, onDeletePage, onSelectPage }: Props) {
     const [isAddingPage, setIsAddingPage] = useState(false);
     const [newPage, setNewPage] = useState({
         title: '',
@@ -34,13 +27,13 @@ export default function PageManager({
         sort_order: pages.length + 1,
         conditional_logic: {
             default_next_page_offset: null,
-            rules: []
+            rules: [],
         },
         settings: {
             progress_bar: true,
             auto_advance: false,
-            button_text: 'Next'
-        }
+            button_text: 'Next',
+        },
     });
 
     const [editingPage, setEditingPage] = useState<FormPage | null>(null);
@@ -54,13 +47,13 @@ export default function PageManager({
                 sort_order: pages.length + 1,
                 conditional_logic: {
                     default_next_page_offset: null,
-                    rules: []
+                    rules: [],
                 },
                 settings: {
                     progress_bar: true,
                     auto_advance: false,
-                    button_text: 'Next'
-                }
+                    button_text: 'Next',
+                },
             });
             setIsAddingPage(false);
         }
@@ -86,18 +79,16 @@ export default function PageManager({
                     <Dialog open={isAddingPage} onOpenChange={setIsAddingPage}>
                         <DialogTrigger asChild>
                             <Button size="sm">
-                                <PlusIcon className="h-4 w-4 mr-1" />
+                                <PlusIcon className="mr-1 h-4 w-4" />
                                 Add Page
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="flex max-h-[90vh] flex-col">
                             <DialogHeader>
                                 <DialogTitle>Add New Page</DialogTitle>
-                                <DialogDescription>
-                                    Create a new page for your form
-                                </DialogDescription>
+                                <DialogDescription>Create a new page for your form</DialogDescription>
                             </DialogHeader>
-                            <div className="space-y-4">
+                            <div className="flex-1 space-y-4 overflow-y-auto pr-2">
                                 <div>
                                     <Label htmlFor="page-title">Page Title</Label>
                                     <Input
@@ -122,9 +113,7 @@ export default function PageManager({
                                 <Button variant="outline" onClick={() => setIsAddingPage(false)}>
                                     Cancel
                                 </Button>
-                                <Button onClick={handleAddPage}>
-                                    Add Page
-                                </Button>
+                                <Button onClick={handleAddPage}>Add Page</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
@@ -133,31 +122,25 @@ export default function PageManager({
             <CardContent>
                 <div className="space-y-2">
                     {sortedPages.length === 0 ? (
-                        <p className="text-sm text-gray-500 text-center py-4">
-                            No pages yet. Add your first page to get started.
-                        </p>
+                        <p className="py-4 text-center text-sm text-gray-500">No pages yet. Add your first page to get started.</p>
                     ) : (
                         sortedPages.map((page, index) => (
                             <div
                                 key={page.id}
-                                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                                    selectedPageId === page.id
-                                        ? 'bg-blue-50 border-blue-200'
-                                        : 'hover:bg-gray-50'
+                                className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors ${
+                                    selectedPageId === page.id ? 'border-blue-200 bg-blue-50' : 'hover:bg-gray-50'
                                 }`}
                                 onClick={() => onSelectPage(page.id)}
                             >
                                 <div className="flex items-center space-x-3">
                                     <div className="flex-shrink-0">
-                                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-medium">
                                             {index + 1}
                                         </div>
                                     </div>
                                     <div>
-                                        <h4 className="font-medium text-sm">{page.title}</h4>
-                                        {page.description && (
-                                            <p className="text-xs text-gray-500 mt-1">{page.description}</p>
-                                        )}
+                                        <h4 className="text-sm font-medium">{page.title}</h4>
+                                        {page.description && <p className="mt-1 text-xs text-gray-500">{page.description}</p>}
                                     </div>
                                 </div>
                                 <div className="flex items-center space-x-2">
@@ -168,28 +151,35 @@ export default function PageManager({
                                                 size="sm"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setEditingPage(page);
+                                                    setEditingPage({
+                                                        ...page,
+                                                        conditional_logic: page.conditional_logic || {
+                                                            default_next_page_offset: null,
+                                                            rules: [],
+                                                        },
+                                                        settings: page.settings || {
+                                                            progress_bar: true,
+                                                            auto_advance: false,
+                                                            button_text: 'Next',
+                                                        },
+                                                    });
                                                 }}
                                             >
                                                 <SettingsIcon className="h-4 w-4" />
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent>
+                                        <DialogContent className="flex max-h-[90vh] flex-col">
                                             <DialogHeader>
                                                 <DialogTitle>Edit Page Settings</DialogTitle>
-                                                <DialogDescription>
-                                                    Configure page properties and behavior
-                                                </DialogDescription>
+                                                <DialogDescription>Configure page properties and behavior</DialogDescription>
                                             </DialogHeader>
-                                            <div className="space-y-4">
+                                            <div className="flex-1 space-y-4 overflow-y-auto pr-2">
                                                 <div>
                                                     <Label htmlFor="edit-title">Page Title</Label>
                                                     <Input
                                                         id="edit-title"
                                                         value={editingPage?.title || ''}
-                                                        onChange={(e) => setEditingPage(prev =>
-                                                            prev ? { ...prev, title: e.target.value } : null
-                                                        )}
+                                                        onChange={(e) => setEditingPage((prev) => (prev ? { ...prev, title: e.target.value } : null))}
                                                     />
                                                 </div>
                                                 <div>
@@ -197,9 +187,9 @@ export default function PageManager({
                                                     <Textarea
                                                         id="edit-description"
                                                         value={editingPage?.description || ''}
-                                                        onChange={(e) => setEditingPage(prev =>
-                                                            prev ? { ...prev, description: e.target.value } : null
-                                                        )}
+                                                        onChange={(e) =>
+                                                            setEditingPage((prev) => (prev ? { ...prev, description: e.target.value } : null))
+                                                        }
                                                         rows={3}
                                                     />
                                                 </div>
@@ -208,15 +198,19 @@ export default function PageManager({
                                                     <Input
                                                         id="edit-button-text"
                                                         value={editingPage?.settings?.button_text || 'Next'}
-                                                        onChange={(e) => setEditingPage(prev =>
-                                                            prev ? {
-                                                                ...prev,
-                                                                settings: {
-                                                                    ...prev.settings,
-                                                                    button_text: e.target.value
-                                                                }
-                                                            } : null
-                                                        )}
+                                                        onChange={(e) =>
+                                                            setEditingPage((prev) =>
+                                                                prev
+                                                                    ? {
+                                                                          ...prev,
+                                                                          settings: {
+                                                                              ...prev.settings,
+                                                                              button_text: e.target.value,
+                                                                          },
+                                                                      }
+                                                                    : null,
+                                                            )
+                                                        }
                                                     />
                                                 </div>
                                                 <div className="flex items-center justify-between">
@@ -226,15 +220,19 @@ export default function PageManager({
                                                     </div>
                                                     <Switch
                                                         checked={editingPage?.settings?.progress_bar || false}
-                                                        onCheckedChange={(checked) => setEditingPage(prev =>
-                                                            prev ? {
-                                                                ...prev,
-                                                                settings: {
-                                                                    ...prev.settings,
-                                                                    progress_bar: checked
-                                                                }
-                                                            } : null
-                                                        )}
+                                                        onCheckedChange={(checked) =>
+                                                            setEditingPage((prev) =>
+                                                                prev
+                                                                    ? {
+                                                                          ...prev,
+                                                                          settings: {
+                                                                              ...prev.settings,
+                                                                              progress_bar: checked,
+                                                                          },
+                                                                      }
+                                                                    : null,
+                                                            )
+                                                        }
                                                     />
                                                 </div>
                                                 <div className="flex items-center justify-between">
@@ -244,15 +242,19 @@ export default function PageManager({
                                                     </div>
                                                     <Switch
                                                         checked={editingPage?.settings?.auto_advance || false}
-                                                        onCheckedChange={(checked) => setEditingPage(prev =>
-                                                            prev ? {
-                                                                ...prev,
-                                                                settings: {
-                                                                    ...prev.settings,
-                                                                    auto_advance: checked
-                                                                }
-                                                            } : null
-                                                        )}
+                                                        onCheckedChange={(checked) =>
+                                                            setEditingPage((prev) =>
+                                                                prev
+                                                                    ? {
+                                                                          ...prev,
+                                                                          settings: {
+                                                                              ...prev.settings,
+                                                                              auto_advance: checked,
+                                                                          },
+                                                                      }
+                                                                    : null,
+                                                            )
+                                                        }
                                                     />
                                                 </div>
                                                 <div className="space-y-4 border-t pt-4">
@@ -263,7 +265,7 @@ export default function PageManager({
 
                                                     {/* Conditional Rules */}
                                                     <div>
-                                                        <div className="flex items-center justify-between mb-3">
+                                                        <div className="mb-3 flex items-center justify-between">
                                                             <Label className="text-sm font-medium">Rules</Label>
                                                             <Button
                                                                 type="button"
@@ -274,41 +276,56 @@ export default function PageManager({
                                                                         field: '',
                                                                         operator: 'equals' as const,
                                                                         value: '',
-                                                                        next_page_offset: 1
+                                                                        next_page_offset: 1,
                                                                     };
-                                                                    setEditingPage(prev =>
-                                                                        prev ? {
+                                                                    setEditingPage((prev) => {
+                                                                        if (!prev) return null;
+
+                                                                        const currentConditionalLogic = prev.conditional_logic || {
+                                                                            default_next_page_offset: null,
+                                                                            rules: [],
+                                                                        };
+
+                                                                        return {
                                                                             ...prev,
                                                                             conditional_logic: {
-                                                                                ...prev.conditional_logic,
-                                                                                rules: [...(prev.conditional_logic?.rules || []), newRule]
-                                                                            }
-                                                                        } : null
-                                                                    );
+                                                                                default_next_page_offset:
+                                                                                    currentConditionalLogic.default_next_page_offset,
+                                                                                rules: [...(currentConditionalLogic.rules || []), newRule],
+                                                                            },
+                                                                        };
+                                                                    });
                                                                 }}
                                                             >
-                                                                <PlusIcon className="h-4 w-4 mr-1" />
+                                                                <PlusIcon className="mr-1 h-4 w-4" />
                                                                 Add Rule
                                                             </Button>
                                                         </div>
 
                                                         <div className="space-y-3">
                                                             {editingPage?.conditional_logic?.rules?.map((rule, index) => (
-                                                                <div key={index} className="border rounded-lg p-3 space-y-3">
+                                                                <div key={index} className="space-y-3 rounded-lg border p-3">
                                                                     <div className="flex items-center justify-between">
                                                                         <span className="text-sm font-medium">Rule {index + 1}</span>
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="sm"
-                                                                            onClick={() => setEditingPage(prev =>
-                                                                                prev ? {
-                                                                                    ...prev,
-                                                                                    conditional_logic: {
-                                                                                        ...prev.conditional_logic,
-                                                                                        rules: prev.conditional_logic?.rules?.filter((_, i) => i !== index) || []
-                                                                                    }
-                                                                                } : null
-                                                                            )}
+                                                                            onClick={() =>
+                                                                                setEditingPage((prev) =>
+                                                                                    prev
+                                                                                        ? {
+                                                                                              ...prev,
+                                                                                              conditional_logic: {
+                                                                                                  ...prev.conditional_logic,
+                                                                                                  rules:
+                                                                                                      prev.conditional_logic?.rules?.filter(
+                                                                                                          (_, i) => i !== index,
+                                                                                                      ) || [],
+                                                                                              },
+                                                                                          }
+                                                                                        : null,
+                                                                                )
+                                                                            }
                                                                         >
                                                                             <XIcon className="h-4 w-4" />
                                                                         </Button>
@@ -319,17 +336,28 @@ export default function PageManager({
                                                                             <Label className="text-xs">Field Name</Label>
                                                                             <Input
                                                                                 value={rule.field}
-                                                                                onChange={(e) => setEditingPage(prev =>
-                                                                                    prev ? {
-                                                                                        ...prev,
-                                                                                        conditional_logic: {
-                                                                                            ...prev.conditional_logic,
-                                                                                            rules: prev.conditional_logic?.rules?.map((r, i) =>
-                                                                                                i === index ? { ...r, field: e.target.value } : r
-                                                                                            ) || []
-                                                                                        }
-                                                                                    } : null
-                                                                                )}
+                                                                                onChange={(e) =>
+                                                                                    setEditingPage((prev) =>
+                                                                                        prev
+                                                                                            ? {
+                                                                                                  ...prev,
+                                                                                                  conditional_logic: {
+                                                                                                      ...prev.conditional_logic,
+                                                                                                      rules:
+                                                                                                          prev.conditional_logic?.rules?.map(
+                                                                                                              (r, i) =>
+                                                                                                                  i === index
+                                                                                                                      ? {
+                                                                                                                            ...r,
+                                                                                                                            field: e.target.value,
+                                                                                                                        }
+                                                                                                                      : r,
+                                                                                                          ) || [],
+                                                                                                  },
+                                                                                              }
+                                                                                            : null,
+                                                                                    )
+                                                                                }
                                                                                 placeholder="e.g., age_group"
                                                                                 className="h-8 text-sm"
                                                                             />
@@ -338,17 +366,28 @@ export default function PageManager({
                                                                             <Label className="text-xs">Operator</Label>
                                                                             <Select
                                                                                 value={rule.operator}
-                                                                                onValueChange={(value) => setEditingPage(prev =>
-                                                                                    prev ? {
-                                                                                        ...prev,
-                                                                                        conditional_logic: {
-                                                                                            ...prev.conditional_logic,
-                                                                                            rules: prev.conditional_logic?.rules?.map((r, i) =>
-                                                                                                i === index ? { ...r, operator: value as any } : r
-                                                                                            ) || []
-                                                                                        }
-                                                                                    } : null
-                                                                                )}
+                                                                                onValueChange={(value) =>
+                                                                                    setEditingPage((prev) =>
+                                                                                        prev
+                                                                                            ? {
+                                                                                                  ...prev,
+                                                                                                  conditional_logic: {
+                                                                                                      ...prev.conditional_logic,
+                                                                                                      rules:
+                                                                                                          prev.conditional_logic?.rules?.map(
+                                                                                                              (r, i) =>
+                                                                                                                  i === index
+                                                                                                                      ? {
+                                                                                                                            ...r,
+                                                                                                                            operator: value as any,
+                                                                                                                        }
+                                                                                                                      : r,
+                                                                                                          ) || [],
+                                                                                                  },
+                                                                                              }
+                                                                                            : null,
+                                                                                    )
+                                                                                }
                                                                             >
                                                                                 <SelectTrigger className="h-8 text-sm">
                                                                                     <SelectValue />
@@ -367,17 +406,28 @@ export default function PageManager({
                                                                             <Label className="text-xs">Value</Label>
                                                                             <Input
                                                                                 value={rule.value}
-                                                                                onChange={(e) => setEditingPage(prev =>
-                                                                                    prev ? {
-                                                                                        ...prev,
-                                                                                        conditional_logic: {
-                                                                                            ...prev.conditional_logic,
-                                                                                            rules: prev.conditional_logic?.rules?.map((r, i) =>
-                                                                                                i === index ? { ...r, value: e.target.value } : r
-                                                                                            ) || []
-                                                                                        }
-                                                                                    } : null
-                                                                                )}
+                                                                                onChange={(e) =>
+                                                                                    setEditingPage((prev) =>
+                                                                                        prev
+                                                                                            ? {
+                                                                                                  ...prev,
+                                                                                                  conditional_logic: {
+                                                                                                      ...prev.conditional_logic,
+                                                                                                      rules:
+                                                                                                          prev.conditional_logic?.rules?.map(
+                                                                                                              (r, i) =>
+                                                                                                                  i === index
+                                                                                                                      ? {
+                                                                                                                            ...r,
+                                                                                                                            value: e.target.value,
+                                                                                                                        }
+                                                                                                                      : r,
+                                                                                                          ) || [],
+                                                                                                  },
+                                                                                              }
+                                                                                            : null,
+                                                                                    )
+                                                                                }
                                                                                 placeholder="e.g., under_17"
                                                                                 className="h-8 text-sm"
                                                                             />
@@ -389,17 +439,29 @@ export default function PageManager({
                                                                         <Input
                                                                             type="number"
                                                                             value={rule.next_page_offset ?? ''}
-                                                                            onChange={(e) => setEditingPage(prev =>
-                                                                                prev ? {
-                                                                                    ...prev,
-                                                                                    conditional_logic: {
-                                                                                        ...prev.conditional_logic,
-                                                                                        rules: prev.conditional_logic?.rules?.map((r, i) =>
-                                                                                            i === index ? { ...r, next_page_offset: e.target.value ? parseInt(e.target.value) : undefined } : r
-                                                                                        ) || []
-                                                                                    }
-                                                                                } : null
-                                                                            )}
+                                                                            onChange={(e) =>
+                                                                                setEditingPage((prev) =>
+                                                                                    prev
+                                                                                        ? {
+                                                                                              ...prev,
+                                                                                              conditional_logic: {
+                                                                                                  ...prev.conditional_logic,
+                                                                                                  rules:
+                                                                                                      prev.conditional_logic?.rules?.map((r, i) =>
+                                                                                                          i === index
+                                                                                                              ? {
+                                                                                                                    ...r,
+                                                                                                                    next_page_offset: e.target.value
+                                                                                                                        ? parseInt(e.target.value)
+                                                                                                                        : undefined,
+                                                                                                                }
+                                                                                                              : r,
+                                                                                                      ) || [],
+                                                                                              },
+                                                                                          }
+                                                                                        : null,
+                                                                                )
+                                                                            }
                                                                             placeholder="1 = next page, 2 = page after next"
                                                                             className="h-8 text-sm"
                                                                         />
@@ -416,19 +478,25 @@ export default function PageManager({
                                                             id="default-next-page-offset"
                                                             type="number"
                                                             value={editingPage?.conditional_logic?.default_next_page_offset ?? ''}
-                                                            onChange={(e) => setEditingPage(prev =>
-                                                                prev ? {
-                                                                    ...prev,
-                                                                    conditional_logic: {
-                                                                        ...prev.conditional_logic,
-                                                                        default_next_page_offset: e.target.value ? parseInt(e.target.value) : null
-                                                                    }
-                                                                } : null
-                                                            )}
+                                                            onChange={(e) =>
+                                                                setEditingPage((prev) =>
+                                                                    prev
+                                                                        ? {
+                                                                              ...prev,
+                                                                              conditional_logic: {
+                                                                                  ...prev.conditional_logic,
+                                                                                  default_next_page_offset: e.target.value
+                                                                                      ? parseInt(e.target.value)
+                                                                                      : null,
+                                                                              },
+                                                                          }
+                                                                        : null,
+                                                                )
+                                                            }
                                                             placeholder="1 = next page, 2 = page after next, null = final page"
                                                             className="text-sm"
                                                         />
-                                                        <p className="text-xs text-gray-500 mt-1">
+                                                        <p className="mt-1 text-xs text-gray-500">
                                                             Leave null for final page, or specify how many pages to skip ahead
                                                         </p>
                                                     </div>
@@ -438,9 +506,7 @@ export default function PageManager({
                                                 <Button variant="outline" onClick={() => setEditingPage(null)}>
                                                     Cancel
                                                 </Button>
-                                                <Button onClick={handleUpdatePage}>
-                                                    Save Changes
-                                                </Button>
+                                                <Button onClick={handleUpdatePage}>Save Changes</Button>
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
